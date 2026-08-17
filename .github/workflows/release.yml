@@ -155,9 +155,22 @@ jobs:
           while IFS=$'\t' read -r id name; do
             [ -z "${name:-}" ] && continue
 
-            # Extension determines the OS. .app.tar.gz must be matched before .gz.
+            # The macOS .app is a directory, so tauri-action tars it purely to
+            # have something uploadable. It is not an installer and there is no
+            # updater configured to consume it (createUpdaterArtifacts is off),
+            # so it is dead weight next to the .dmg and only makes the asset
+            # list harder to read. Drop it rather than rename it.
             case "$name" in
-              *.app.tar.gz) ext="app.tar.gz"; os="macos"   ;;
+              *.app.tar.gz)
+                echo "deleting (redundant .app tarball, superseded by the .dmg): $name"
+                gh api --method DELETE \
+                  "repos/$GITHUB_REPOSITORY/releases/assets/$id" --silent
+                continue
+                ;;
+            esac
+
+            # Extension determines the OS.
+            case "$name" in
               *.dmg)        ext="dmg";        os="macos"   ;;
               *.msi)        ext="msi";        os="windows" ;;
               *.exe)        ext="exe";        os="windows" ;;
