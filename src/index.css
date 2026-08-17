@@ -1,0 +1,552 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Account for fixed footer when scrolling */
+html {
+  scroll-padding-bottom: 4rem;
+}
+
+/* Editor styles */
+.ProseMirror {
+  @apply outline-none min-h-[500px] p-4 bg-white text-gray-900;
+  scroll-padding-bottom: 2rem;
+}
+
+/* Dark mode editor background */
+.dark .ProseMirror {
+  @apply bg-gray-800 text-gray-100;
+}
+
+/* Ensure editor container scrolls properly */
+.ProseMirror:focus {
+  scroll-margin-bottom: 4rem;
+}
+
+.ProseMirror p {
+  @apply my-2;
+}
+
+.ProseMirror h1 {
+  font-size: 2.25em;
+  @apply font-bold my-4;
+}
+
+.ProseMirror h2 {
+  font-size: 1.875em;
+  @apply font-bold my-3;
+}
+
+.ProseMirror h3 {
+  font-size: 1.5em;
+  @apply font-bold my-3;
+}
+
+.ProseMirror h4 {
+  font-size: 1.25em;
+  @apply font-bold my-2;
+}
+
+.ProseMirror h5 {
+  font-size: 1.125em;
+  @apply font-bold my-2;
+}
+
+.ProseMirror h6 {
+  font-size: 1em;
+  @apply font-bold my-2;
+}
+
+.ProseMirror ul {
+  @apply list-disc ml-6 my-2;
+}
+
+.ProseMirror ul[data-marker="*"] {
+  list-style-type: circle;
+}
+
+.ProseMirror ul[data-marker="+"] {
+  list-style-type: square;
+}
+
+.ProseMirror ol {
+  @apply list-decimal ml-6 my-2;
+}
+
+.ProseMirror li {
+  @apply my-1;
+}
+
+.ProseMirror blockquote {
+  @apply border-l-4 border-gray-300 pl-4 pr-3 py-1 my-4 bg-gray-50 rounded-r;
+}
+
+.ProseMirror code {
+  @apply bg-gray-100 rounded px-1 py-0.5 font-mono text-pink-600;
+  font-size: 0.875em;
+}
+
+.ProseMirror h1 code,
+.ProseMirror h2 code,
+.ProseMirror h3 code,
+.ProseMirror h4 code,
+.ProseMirror h5 code,
+.ProseMirror h6 code {
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.ProseMirror pre {
+  @apply bg-gray-900 text-gray-100 rounded-lg p-4 my-4 overflow-x-auto leading-snug;
+  font-size: 0.875em;
+}
+
+.ProseMirror pre code {
+  @apply bg-transparent text-inherit p-0 leading-snug;
+  font-size: inherit;
+}
+
+.ProseMirror a {
+  @apply text-blue-600 underline hover:text-blue-800 cursor-pointer relative;
+}
+
+.ProseMirror a:hover::after {
+  content: attr(href);
+  @apply absolute left-0 top-full mt-1 px-2 py-1 text-xs font-normal no-underline rounded shadow-lg whitespace-nowrap z-50 bg-gray-800 text-gray-100;
+}
+
+.ProseMirror hr {
+  @apply border-t border-gray-300 my-6;
+}
+
+.ProseMirror img {
+  @apply max-w-full h-auto rounded;
+}
+
+/* Task list styles */
+.ProseMirror ul[data-type="taskList"] {
+  @apply list-none ml-0 pl-0;
+}
+
+.ProseMirror ul[data-type="taskList"] li {
+  @apply flex items-baseline gap-2 my-1;
+}
+
+.ProseMirror ul[data-type="taskList"] li > label {
+  @apply flex-shrink-0 select-none;
+}
+
+.ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"] {
+  @apply w-4 h-4 cursor-pointer;
+  margin: 0;
+  position: relative;
+  top: 2px;
+}
+
+.ProseMirror ul[data-type="taskList"] li > div {
+  @apply flex-1;
+}
+
+.ProseMirror ul[data-type="taskList"] li > div p {
+  @apply my-0;
+}
+
+/* Strikethrough */
+.ProseMirror s {
+  @apply line-through text-gray-500;
+}
+
+/* Placeholder */
+.ProseMirror p.is-editor-empty:first-child::before {
+  @apply text-gray-400 float-left h-0 pointer-events-none;
+  content: attr(data-placeholder);
+}
+
+/* Code block syntax highlighting */
+.ProseMirror pre code .hljs-comment,
+.ProseMirror pre code .hljs-quote {
+  @apply text-gray-500 italic;
+}
+
+.ProseMirror pre code .hljs-keyword,
+.ProseMirror pre code .hljs-selector-tag {
+  @apply text-purple-400;
+}
+
+.ProseMirror pre code .hljs-string,
+.ProseMirror pre code .hljs-attr {
+  @apply text-green-400;
+}
+
+.ProseMirror pre code .hljs-number,
+.ProseMirror pre code .hljs-literal {
+  @apply text-orange-400;
+}
+
+.ProseMirror pre code .hljs-function,
+.ProseMirror pre code .hljs-title {
+  @apply text-blue-400;
+}
+
+.ProseMirror pre code .hljs-variable,
+.ProseMirror pre code .hljs-name {
+  @apply text-red-400;
+}
+
+.ProseMirror pre code .hljs-type,
+.ProseMirror pre code .hljs-class .hljs-title,
+.ProseMirror pre code .hljs-built_in {
+  @apply text-cyan-400;
+}
+
+.ProseMirror pre code .hljs-params {
+  @apply text-orange-300;
+}
+
+.ProseMirror pre code .hljs-meta,
+.ProseMirror pre code .hljs-meta .hljs-keyword {
+  @apply text-yellow-400;
+}
+
+.ProseMirror pre code .hljs-doctag {
+  @apply text-green-300 italic;
+}
+
+.ProseMirror pre code .hljs-symbol,
+.ProseMirror pre code .hljs-bullet {
+  @apply text-pink-400;
+}
+
+.ProseMirror pre code .hljs-selector-class,
+.ProseMirror pre code .hljs-selector-id {
+  @apply text-yellow-300;
+}
+
+.ProseMirror pre code .hljs-property {
+  @apply text-sky-400;
+}
+
+.ProseMirror pre code .hljs-regexp {
+  @apply text-red-300;
+}
+
+.ProseMirror pre code .hljs-operator {
+  @apply text-gray-300;
+}
+
+.ProseMirror pre code .hljs-addition {
+  @apply text-green-400 bg-green-900/30;
+}
+
+.ProseMirror pre code .hljs-deletion {
+  @apply text-red-400 bg-red-900/30;
+}
+
+.ProseMirror pre code .hljs-subst {
+  @apply text-gray-200;
+}
+
+.ProseMirror pre code .hljs-template-variable,
+.ProseMirror pre code .hljs-template-tag {
+  @apply text-teal-300;
+}
+
+/* Table styles */
+.ProseMirror table {
+  @apply border-collapse table-auto my-4;
+}
+
+.ProseMirror th,
+.ProseMirror td {
+  @apply border border-gray-300 px-3 py-2 text-left;
+  min-width: 100px;
+}
+
+.ProseMirror th {
+  @apply bg-gray-100 font-semibold;
+}
+
+.ProseMirror th p,
+.ProseMirror td p {
+  @apply my-0;
+}
+
+/* Selected cell */
+.ProseMirror .selectedCell {
+  @apply bg-blue-100;
+}
+
+/* Selected cell after (for multiple selection) */
+.ProseMirror .selectedCell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  @apply bg-blue-500/10;
+}
+
+/* Table resize handle */
+.ProseMirror .column-resize-handle {
+  @apply bg-blue-500;
+  width: 3px;
+  position: absolute;
+  right: -1px;
+  top: 0;
+  bottom: 0;
+  cursor: col-resize;
+  z-index: 10;
+}
+
+.ProseMirror.resize-cursor {
+  cursor: col-resize;
+}
+
+/* Table cell hover effect */
+.ProseMirror td,
+.ProseMirror th {
+  position: relative;
+  transition: background-color 0.15s ease;
+}
+
+.ProseMirror td:hover,
+.ProseMirror th:hover {
+  @apply bg-gray-50;
+}
+
+/* Table grip/handle for entire table */
+.ProseMirror table {
+  position: relative;
+}
+
+/* Highlight row on cell selection */
+.ProseMirror tr:has(.selectedCell) {
+  @apply bg-blue-50/50;
+}
+
+/* Dark mode styles */
+.dark .ProseMirror blockquote {
+  @apply border-gray-500 bg-gray-700/50;
+}
+
+.dark .ProseMirror code {
+  @apply bg-gray-700 text-pink-400;
+}
+
+.dark .ProseMirror pre code {
+  @apply bg-transparent text-inherit;
+}
+
+.dark .ProseMirror a {
+  @apply text-blue-400 hover:text-blue-300;
+}
+
+.dark .ProseMirror a:hover::after {
+  @apply bg-gray-200 text-gray-900;
+}
+
+.dark .ProseMirror hr {
+  @apply border-gray-600;
+}
+
+.dark .ProseMirror s {
+  @apply text-gray-400;
+}
+
+.dark .ProseMirror p.is-editor-empty:first-child::before {
+  @apply text-gray-500;
+}
+
+/* Dark mode table styles */
+.dark .ProseMirror th,
+.dark .ProseMirror td {
+  @apply border-gray-600;
+}
+
+.dark .ProseMirror th {
+  @apply bg-gray-700;
+}
+
+.dark .ProseMirror td:hover,
+.dark .ProseMirror th:hover {
+  @apply bg-gray-700;
+}
+
+.dark .ProseMirror .selectedCell {
+  @apply bg-blue-900;
+}
+
+.dark .ProseMirror .selectedCell::after {
+  @apply bg-blue-400/10;
+}
+
+.dark .ProseMirror tr:has(.selectedCell) {
+  @apply bg-blue-900/30;
+}
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}
+
+::-webkit-scrollbar-corner {
+  @apply bg-gray-100;
+}
+
+.dark ::-webkit-scrollbar-track {
+  @apply bg-gray-800;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  @apply bg-gray-600 rounded-full;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-500;
+}
+
+.dark ::-webkit-scrollbar-corner {
+  @apply bg-gray-800;
+}
+
+/* Print styles — hide all chrome, show only editor content */
+@media print {
+  header, footer, nav,
+  .sticky,
+  [data-type="tabBar"],
+  .search-bar {
+    display: none !important;
+  }
+
+  .ProseMirror {
+    min-height: auto !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Hide editor chrome */
+  .border {
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Reset dark mode for print */
+  .dark .ProseMirror {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Ensure code blocks print well */
+  .ProseMirror pre {
+    background: #f5f5f5 !important;
+    color: #333 !important;
+    border: 1px solid #ddd !important;
+  }
+
+  body {
+    background: white !important;
+  }
+}
+
+/* Search & Replace highlights */
+.ProseMirror .search-match {
+  @apply bg-yellow-200 dark:bg-yellow-700/60 rounded-sm;
+}
+
+.ProseMirror .search-match-current {
+  @apply bg-orange-300 dark:bg-orange-600/80 rounded-sm ring-2 ring-orange-400 dark:ring-orange-500;
+}
+
+/* Mermaid diagrams */
+.ProseMirror .mermaid-block {
+  @apply my-4;
+}
+
+/* Rendered graph container (read-only). A div — not <pre> — so the dark
+   code-block styling above does not apply to the diagram. */
+.ProseMirror .mermaid-graph {
+  @apply relative border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 p-4;
+}
+
+.ProseMirror .mermaid-svg {
+  @apply flex justify-center overflow-x-auto;
+}
+
+.ProseMirror .mermaid-svg svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.ProseMirror .mermaid-empty {
+  @apply text-sm text-gray-400 dark:text-gray-500 text-center py-4 select-none;
+}
+
+.ProseMirror .mermaid-error {
+  @apply text-sm text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded p-3 font-mono whitespace-pre-wrap;
+}
+
+/* Floating Expand / Edit / View controls */
+.ProseMirror .mermaid-toolbar {
+  @apply absolute top-2 right-2 z-10 flex gap-1 opacity-0 transition-opacity;
+}
+
+/* focus-within so a keyboard user tabbing onto Expand can actually see it. */
+.ProseMirror .mermaid-graph:hover .mermaid-toolbar,
+.ProseMirror .mermaid-graph:focus-within .mermaid-toolbar,
+.ProseMirror .mermaid-editor:hover .mermaid-toolbar,
+.ProseMirror .mermaid-editor .mermaid-toolbar {
+  @apply opacity-100;
+}
+
+.ProseMirror .mermaid-toolbar button {
+  @apply px-2 py-1 text-xs font-medium rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer shadow-sm;
+}
+
+/* Edit mode reuses the code-block <pre> styling; anchor the toolbar. */
+.ProseMirror .mermaid-editor {
+  @apply relative;
+}
+
+/* Expanded diagram viewer.
+   Deliberately NOT scoped to .ProseMirror — the dialog lives outside the editor,
+   and the .ProseMirror rules above (max-width: 100%, overflow-x-auto) would
+   fight transform-based zoom. */
+.mermaid-viewer-view {
+  /* Stop the browser claiming pan/pinch gestures over the diagram. */
+  touch-action: none;
+}
+
+.mermaid-viewer-stage {
+  @apply absolute top-0 left-0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.mermaid-viewer-stage svg {
+  /* Overrides Mermaid's inline `max-width` for the frame before the layout
+     effect swaps in the intrinsic pixel size. */
+  max-width: none !important;
+  display: block;
+}
+
+.mermaid-viewer-view kbd,
+.mermaid-viewer-hint kbd {
+  @apply px-1 py-0.5 text-[0.65rem] font-mono bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded;
+}

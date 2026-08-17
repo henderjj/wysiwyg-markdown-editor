@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Build / distribution output
+dist/
+tsconfig.tsbuildinfo
+
+# Tauri build output (Rust)
+src-tauri/target/
+
+# Environment and secrets
+.env
+.env.*
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Claude Code config (local settings, session transcripts)
+.claude/

@@ -1,0 +1,92 @@
+name: Desktop Build
+
+# Verifies that the Tauri desktop app compiles and bundles on all three
+# platforms. This does NOT publish anything — see release.yml for that.
+#
+# Runs on pushes to main, on pull requests that touch the desktop app or its
+# build inputs, and on demand. It is deliberately not run on every frontend-only
+# pull request, because a Rust build is slow compared with the web CI job.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - 'src-tauri/**'
+      - '.github/workflows/desktop.yml'
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      # Don't cancel the other platforms when one fails — when a build breaks,
+      # knowing whether it broke everywhere or only on one OS is the useful part.
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            label: Linux
+          - os: macos-latest
+            label: macOS (Apple Silicon)
+          - os: windows-latest
+            label: Windows
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux system dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - run: npm ci
+
+      # Builds the frontend (via beforeBuildCommand) and then the native app,
+      # including the installer bundles for the host platform.
+      - name: Build desktop app
+        run: npm run tauri:build
+
+      - name: Upload installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: installers-${{ matrix.os }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: |
+            src-tauri/target/release/bundle/**/*.msi
+            src-tauri/target/release/bundle/**/*.exe
+            src-tauri/target/release/bundle/**/*.dmg
+            src-tauri/target/release/bundle/**/*.app
+            src-tauri/target/release/bundle/**/*.deb
+            src-tauri/target/release/bundle/**/*.rpm
+            src-tauri/target/release/bundle/**/*.AppImage

@@ -1,0 +1,95 @@
+name: Release
+
+# Builds installers for all three platforms and attaches them to a GitHub
+# Release. This runs ONLY when a version tag is pushed — nothing here fires on
+# an ordinary commit.
+#
+#   git tag v1.5.2
+#   git push origin v1.5.2
+#
+# The release is created as a DRAFT. Review the attached installers, write the
+# release notes, then publish it manually from the GitHub Releases page. Draft
+# is deliberate: an automatic publish would hand users unsigned binaries the
+# moment a tag was pushed, with no chance to check them first.
+#
+# Note: the tag must match the version in tauri.conf.json, package.json and
+# Cargo.toml. Nothing enforces that automatically.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write # required to create the release and upload assets
+
+jobs:
+  release:
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            label: Linux (deb, rpm, AppImage)
+            args: ''
+          - os: macos-latest
+            label: macOS (universal)
+            args: '--target universal-apple-darwin'
+          - os: windows-latest
+            label: Windows (msi, nsis)
+            args: ''
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux system dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      # A universal macOS binary needs both architectures available.
+      - name: Add macOS targets
+        if: matrix.os == 'macos-latest'
+        run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - run: npm ci
+
+      - name: Build and attach to release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: ${{ github.ref_name }}
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}

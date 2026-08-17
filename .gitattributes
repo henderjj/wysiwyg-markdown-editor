@@ -1,0 +1,31 @@
+# Normalize all text files to LF in the repository, and check them out as LF on
+# every platform. This project runs on Windows, macOS and Linux, and the Node,
+# Vite and Rust toolchains all handle LF natively.
+#
+# Note: this governs how *source files* are stored in git. It is unrelated to the
+# editor's runtime behaviour of detecting and preserving a Markdown document's
+# own CRLF/LF line endings when opening and saving it.
+* text=auto eol=lf
+
+# Windows-only tooling that expects CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary assets — never touch line endings, never diff as text
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.icns binary
+*.woff binary
+*.woff2 binary
+
+# Generated lockfiles: keep them in the repo, but collapse them by default in
+# diffs and exclude them from the language statistics on GitHub.
+package-lock.json linguist-generated=true -diff
+src-tauri/Cargo.lock linguist-generated=true -diff
+
+# Vendored/generated Tauri schemas are not hand-written source
+src-tauri/gen/** linguist-generated=true
