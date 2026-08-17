@@ -48,11 +48,18 @@ jobs:
 
       - name: Install Linux system dependencies
         if: matrix.os == 'ubuntu-latest'
+        # The Ayatana appindicator packages that Tauri wants declare an explicit
+        # Conflicts: against the original libappindicator3 packages, and the
+        # runner image ships the originals preinstalled. apt will not resolve
+        # that on its own — it reports "held broken packages" and aborts — so
+        # the old pair has to come off first. `|| true` keeps this working on
+        # images where they were never installed.
         run: |
           sudo apt-get update
+          sudo apt-get remove -y libappindicator3-1 libappindicator3-dev || true
           sudo apt-get install -y \
             libwebkit2gtk-4.1-dev \
-            libappindicator3-dev \
+            libayatana-appindicator3-dev \
             librsvg2-dev \
             patchelf \
             build-essential \
@@ -60,8 +67,7 @@ jobs:
             wget \
             file \
             libxdo-dev \
-            libssl-dev \
-            libayatana-appindicator3-dev
+            libssl-dev
 
       - uses: actions/setup-node@v4
         with:
