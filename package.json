@@ -5,6 +5,9 @@
   "type": "module",
   "description": "A WYSIWYG editor that produces GitHub Flavored Markdown",
   "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

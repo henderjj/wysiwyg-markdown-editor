@@ -125,7 +125,7 @@ Three workflows cover this:
 
 | Workflow | Trigger | What it does |
 |----------|---------|--------------|
-| **CI** | every push and PR | Lint, test and build the web app on Node 20 and 22 |
+| **CI** | every push and PR | Lint, test and build the web app on Node 22 and 24 |
 | **Desktop Build** | push to `main`, PRs touching `src-tauri/`, manual | Compile and bundle the desktop app on Windows, macOS and Linux; attach installers to the run |
 | **Release** | pushing a `v*` tag | Build all three platforms and attach the installers to a **draft** GitHub Release |
 

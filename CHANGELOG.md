@@ -17,7 +17,7 @@ First public release.
 
 - `LICENSE` (MIT), `CONTRIBUTING.md`, `SECURITY.md`, and this changelog.
 - ESLint flat config (`eslint.config.js`). `npm run lint` was previously advertised but had no configuration file and could not run.
-- GitHub Actions CI running lint, tests, and build on Node 20 and 22.
+- GitHub Actions CI running lint, tests, and build on Node 22 and 24.
 - **Desktop Build** workflow compiling and bundling the Tauri app on Windows, macOS and Linux, with installers attached to each run as artifacts.
 - **Release** workflow that builds all three platforms on a `v*` tag and attaches the installers to a draft GitHub Release for manual review before publishing.
 - Screenshot in the README, and a "Known Limitations" section documenting that relative/local image paths do not render in-editor and that setext headings are unsupported.

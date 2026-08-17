@@ -4,7 +4,7 @@ Contributions are welcome. This is a personal open-source project maintained on 
 
 ## Getting Set Up
 
-Requires Node.js 20 or later.
+Requires Node.js 22 or later. Node 20 reached end of life in April 2026 and is no longer tested.
 
 ```bash
 npm install
@@ -19,7 +19,7 @@ npm run tauri:dev
 
 ## Before Opening a Pull Request
 
-CI runs these three commands on Node 20 and 22. Run them locally first:
+CI runs these three commands on Node 22 and 24. Run them locally first:
 
 ```bash
 npm run lint
