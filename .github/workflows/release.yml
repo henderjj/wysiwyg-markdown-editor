@@ -46,7 +46,7 @@ jobs:
             args: ''
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Fail fast if the tag disagrees with the manifests, rather than shipping
       # installers whose filenames and in-app version don't match the release.
@@ -85,7 +85,7 @@ jobs:
             libxdo-dev \
             libssl-dev
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22.x
           cache: npm
