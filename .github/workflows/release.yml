@@ -15,11 +15,13 @@ name: Release
 # Note: the tag must match the version in tauri.conf.json, package.json and
 # Cargo.toml. Nothing enforces that automatically.
 
+# Deliberately tag-only. A workflow_dispatch trigger would set github.ref_name
+# to the branch name, producing a draft release literally called "main". Re-run
+# failed jobs from the Actions UI instead — that preserves the original ref.
 on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch:
 
 permissions:
   contents: write # required to create the release and upload assets
@@ -45,6 +47,20 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      # Fail fast if the tag disagrees with the manifests, rather than shipping
+      # installers whose filenames and in-app version don't match the release.
+      - name: Verify tag matches package version
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG=$(node -p "require('./package.json').version")
+          CONF=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          echo "tag=$TAG package.json=$PKG tauri.conf.json=$CONF"
+          if [ "$TAG" != "$PKG" ] || [ "$TAG" != "$CONF" ]; then
+            echo "::error::Tag v$TAG does not match package.json ($PKG) / tauri.conf.json ($CONF)"
+            exit 1
+          fi
 
       - name: Install Linux system dependencies
         if: matrix.os == 'ubuntu-latest'
