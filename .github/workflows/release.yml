@@ -115,3 +115,87 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
+
+  # Tauri derives bundle filenames from productName + version + arch and offers
+  # no template to control them, so the names are normalised here instead.
+  # Renaming after upload (PATCH on the asset) avoids re-uploading anything.
+  #
+  # Runs once, after every platform has finished, so it sees the complete set.
+  rename-assets:
+    name: Normalise asset names
+    needs: release
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Rename release assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          VERSION="${TAG#v}"
+          PRODUCT=$(node -p "require('./package.json').name")
+
+          # A draft release is NOT reachable via /releases/tags/{tag} — that
+          # endpoint 404s for drafts — so find it by listing releases instead.
+          RELEASE_ID=$(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate \
+            --jq "[.[] | select(.tag_name == \"$TAG\")] | first | .id")
+
+          if [ -z "$RELEASE_ID" ] || [ "$RELEASE_ID" = "null" ]; then
+            echo "::error::No release found for tag $TAG"
+            exit 1
+          fi
+
+          gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets" --paginate \
+            --jq '.[] | "\(.id)\t\(.name)"' > assets.tsv
+
+          while IFS=$'\t' read -r id name; do
+            [ -z "${name:-}" ] && continue
+
+            # Extension determines the OS. .app.tar.gz must be matched before .gz.
+            case "$name" in
+              *.app.tar.gz) ext="app.tar.gz"; os="macos"   ;;
+              *.dmg)        ext="dmg";        os="macos"   ;;
+              *.msi)        ext="msi";        os="windows" ;;
+              *.exe)        ext="exe";        os="windows" ;;
+              *.deb)        ext="deb";        os="linux"   ;;
+              *.rpm)        ext="rpm";        os="linux"   ;;
+              *.AppImage)   ext="AppImage";   os="linux"   ;;
+              *) echo "skipping (unrecognised type): $name"; continue ;;
+            esac
+
+            # Keep each ecosystem's own architecture spelling: amd64 for Debian
+            # and AppImage, x86_64 for RPM, x64 for Windows. Longest tokens are
+            # tested first so a longer name cannot match a shorter one.
+            arch=""
+            for a in universal x86_64 aarch64 amd64 arm64 i686 x64; do
+              case "$name" in *"$a"*) arch="$a"; break ;; esac
+            done
+            if [ -z "$arch" ]; then
+              echo "skipping (no architecture in name): $name"
+              continue
+            fi
+
+            # Distinguish the NSIS installer from the MSI.
+            suffix=""
+            case "$name" in *-setup.exe) suffix="-setup" ;; esac
+
+            new="${PRODUCT}-${VERSION}-${os}-${arch}${suffix}.${ext}"
+
+            if [ "$new" = "$name" ]; then
+              echo "unchanged: $name"
+              continue
+            fi
+
+            echo "$name  ->  $new"
+            gh api --method PATCH \
+              "repos/$GITHUB_REPOSITORY/releases/assets/$id" \
+              -f name="$new" --silent
+          done < assets.tsv
+
+          echo "--- final asset names ---"
+          gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets" \
+            --jq '.[].name'
