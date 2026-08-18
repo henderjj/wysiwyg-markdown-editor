@@ -41,14 +41,14 @@
     "lowlight": "^3.2.0",
     "mermaid": "^11.4.1",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react-dom": "^19.2.8",
     "turndown": "^7.2.4"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@tauri-apps/cli": "^2.11.4",
     "@types/react": "^18.3.18",
-    "@types/react-dom": "^18.3.5",
+    "@types/react-dom": "^19.2.4",
     "@types/turndown": "^5.0.5",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.5.4",
