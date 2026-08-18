@@ -35,6 +35,34 @@ updates:
         update-types:
           - minor
           - patch
+      # React and ReactDOM must share a major version to run at all, and their
+      # @types/* packages must match too. Dependabot's own automatic grouping
+      # is not a substitute for this: it once proposed "react-dom" and
+      # "@types/react-dom" together in one PR while leaving "react" and
+      # "@types/react" out of that same group, which broke `npm ci` outright
+      # (a peer-dependency mismatch, not a version-arithmetic mistake on
+      # Dependabot's part -- its family-detection just doesn't reach this
+      # wide by default). List all four explicitly instead of relying on that.
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+        update-types:
+          - minor
+          - patch
+      # vite and @vitejs/plugin-react peer-constrain each other's major
+      # version the same way eslint's packages do below -- confirmed in
+      # practice: @vitejs/plugin-react@6 requires vite@^8, so bumping either
+      # alone against the other's current major fails to install.
+      vite:
+        patterns:
+          - "vite"
+          - "@vitejs/plugin-react"
+        update-types:
+          - minor
+          - patch
       # Everything else, bundled by risk level so routine upgrades arrive as a
       # couple of reviewable PRs rather than a dozen. Major versions are
       # deliberately excluded from these groups and so arrive individually,
@@ -47,11 +75,18 @@ updates:
         exclude-patterns:
           - "@tiptap/*"
           - "@tauri-apps/*"
+          - "react"
+          - "react-dom"
       development-minor-patch:
         dependency-type: development
         update-types:
           - minor
           - patch
+        exclude-patterns:
+          - "@types/react"
+          - "@types/react-dom"
+          - "vite"
+          - "@vitejs/plugin-react"
     # A major bump for either of these, if merely left ungrouped by the
     # restriction above, would arrive as one individual PR PER PACKAGE --
     # 15 of them for Tiptap. Suppress majors outright instead; do that
@@ -90,6 +125,37 @@ updates:
         update-types:
           - "version-update:semver-major"
       - dependency-name: "typescript-eslint"
+        update-types:
+          - "version-update:semver-major"
+      # Confirmed the same peer-coordination hazard for react/react-dom's
+      # @types packages and for vite/@vitejs-plugin-react -- see the "react"
+      # and "vite" groups above for the specifics of each.
+      - dependency-name: "react"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "react-dom"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "@types/react"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "@types/react-dom"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "vite"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "@vitejs/plugin-react"
+        update-types:
+          - "version-update:semver-major"
+      # Tailwind v4 replaced the JS-config + @tailwind-directive architecture
+      # with a CSS-first one (@import "tailwindcss" + @theme) -- this is a
+      # real migration (new PostCSS plugin package, tailwind.config.js
+      # rewritten as CSS, every utility class in the app re-checked), not a
+      # version bump. `npm ci` succeeds for this one; the *build* fails
+      # inside Tailwind's own PostCSS processing of the current config.
+      # Deferred deliberately; do it as dedicated work when it's worth doing.
+      - dependency-name: "tailwindcss"
         update-types:
           - "version-update:semver-major"
 

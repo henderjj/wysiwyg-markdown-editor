@@ -4,6 +4,22 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0]
+
+### Changed
+
+- Updated to React 19 (`react`, `react-dom`, `@types/react`, `@types/react-dom`, all bumped together) and Vite 8 (`vite`, `@vitejs/plugin-react`, bumped together — `@vitejs/plugin-react@6` requires `vite@^8`). Both pairs failed to install individually via Dependabot due to peer-dependency conflicts against their unbumped counterpart. Verified in a real browser after the combined bump: editing, undo/redo, search, and Mermaid rendering all work with zero console errors or warnings.
+- Merged a routine `typescript` 5.6→5.9 minor bump.
+- Vite 8 now uses Rolldown (a Rust-based bundler) instead of Rollup by default. Transparent here — `vite.config.ts` has no `rollupOptions` to migrate — but worth knowing if build-time config is ever added.
+
+### Fixed
+
+- `.github/dependabot.yml`: added an explicit `react` group covering `react`/`react-dom`/`@types/react`/`@types/react-dom`. Dependabot's own automatic grouping had proposed `react-dom` and `@types/react-dom` together in one PR while leaving `react`/`@types/react` out of that same group — a real gap in its family-detection, not a version-arithmetic mistake — which broke `npm ci` outright. Also added a `vite` group for the same peer-coordination reason as the ESLint toolchain in 1.6.1.
+
+### Deferred
+
+- Closed a Dependabot PR bumping `tailwindcss` 3→4 and added a dependabot.yml ignore rule for it. Unlike the other bumps this session, it is not a peer-dependency conflict — `npm ci` succeeds, but the build fails inside Tailwind's PostCSS processing. Tailwind v4 replaced the JS-config + `@tailwind`-directive architecture with a CSS-first one (`@import "tailwindcss"` + `@theme`), which needs a real migration (new `@tailwindcss/postcss` package, `tailwind.config.js` rewritten as CSS, every utility class in the app re-checked) — scoped as dedicated future work, the same shape as the TipTap v3 migration in 1.6.0.
+
 ## [1.6.1]
 
 ### Fixed
