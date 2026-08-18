@@ -1,4 +1,6 @@
-import { Editor, BubbleMenu } from '@tiptap/react'
+import { useCallback, useMemo } from 'react'
+import { Editor } from '@tiptap/react'
+import { BubbleMenu } from '@tiptap/react/menus'
 
 interface FloatingTableToolbarProps {
   editor: Editor
@@ -33,19 +35,24 @@ function Separator() {
 }
 
 export function FloatingTableToolbar({ editor }: FloatingTableToolbarProps) {
+  // See the matching comment in FloatingImageToolbar.tsx -- BubbleMenu's
+  // internal effect dispatches a transaction whenever shouldShow/options
+  // change reference, and inline literals here change reference every
+  // render, which loops forever once shouldRerenderOnTransaction is on.
+  const shouldShow = useCallback(
+    ({ editor }: { editor: Editor }) => editor.isActive('table') && !editor.isActive('image'),
+    []
+  )
+  const options = useMemo(() => ({ placement: 'top' as const, offset: 10 }), [])
+
   if (!editor) return null
 
   return (
     <BubbleMenu
       editor={editor}
-      tippyOptions={{
-        duration: 100,
-        placement: 'top',
-        offset: [0, 10],
-      }}
-      shouldShow={({ editor }) => {
-        return editor.isActive('table') && !editor.isActive('image')
-      }}
+      pluginKey="tableBubbleMenu"
+      options={options}
+      shouldShow={shouldShow}
       className="flex items-center gap-0.5 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg"
     >
       {/* Column operations */}

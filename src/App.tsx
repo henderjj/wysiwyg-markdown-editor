@@ -339,7 +339,7 @@ function App() {
       isLoadingContentRef.current = true
       const doc = activeDocRef.current
       const html = doc?.content ? markdownToHtml(doc.content) : '<p></p>'
-      editor.commands.setContent(html)
+      editor.commands.setContent(html, { emitUpdate: false })
       clearEditorHistory(editor)
       if (showPreviewRef.current && doc?.content) {
         setMarkdownContent(doc.content)
@@ -358,7 +358,7 @@ function App() {
         const filename = cliPath.split(/[/\\]/).pop() || 'document.md'
         isLoadingContentRef.current = true
         const cliHtml = markdownToHtml(content)
-        editor.commands.setContent(cliHtml)
+        editor.commands.setContent(cliHtml, { emitUpdate: false })
         clearEditorHistory(editor)
         editor.chain().setTextSelection(0).focus().run()
         setFilePath(currentDocId, cliPath)
@@ -549,7 +549,7 @@ function App() {
     setActiveDocId(newDoc.id)
     if (editorRef.current) {
       isLoadingContentRef.current = true
-      editorRef.current.commands.setContent('<p></p>')
+      editorRef.current.commands.setContent('<p></p>', { emitUpdate: false })
       clearEditorHistory(editorRef.current)
       setTimeout(() => {
         isLoadingContentRef.current = false
@@ -595,7 +595,7 @@ function App() {
         setActiveDocId(newDoc.id)
         if (editorRef.current) {
           isLoadingContentRef.current = true
-          editorRef.current.commands.setContent('<p></p>')
+          editorRef.current.commands.setContent('<p></p>', { emitUpdate: false })
           clearEditorHistory(editorRef.current)
           setTimeout(() => { isLoadingContentRef.current = false; updateStatusInfo() }, 100)
         }
@@ -612,7 +612,7 @@ function App() {
         if (editorRef.current) {
           isLoadingContentRef.current = true
           const html = newActiveDoc.content ? markdownToHtml(newActiveDoc.content) : '<p></p>'
-          editorRef.current.commands.setContent(html)
+          editorRef.current.commands.setContent(html, { emitUpdate: false })
           clearEditorHistory(editorRef.current)
           setTimeout(() => { isLoadingContentRef.current = false; updateStatusInfo() }, 100)
         }
@@ -649,7 +649,7 @@ function App() {
     if (editorRef.current && doc) {
       isLoadingContentRef.current = true
       const html = doc.content ? markdownToHtml(doc.content) : '<p></p>'
-      editorRef.current.commands.setContent(html)
+      editorRef.current.commands.setContent(html, { emitUpdate: false })
       clearEditorHistory(editorRef.current)
       if (showPreviewRef.current) {
         setMarkdownContent(doc.content)
@@ -767,7 +767,7 @@ function App() {
     setActiveDocId(newDoc.id)
     if (editorRef.current) {
       isLoadingContentRef.current = true
-      editorRef.current.commands.setContent('<p></p>')
+      editorRef.current.commands.setContent('<p></p>', { emitUpdate: false })
       clearEditorHistory(editorRef.current)
       setTimeout(() => { isLoadingContentRef.current = false; updateStatusInfo() }, 100)
     }
@@ -882,7 +882,7 @@ function App() {
       ))
       if (docId === activeDocIdRef.current && editorRef.current) {
         isLoadingContentRef.current = true
-        editorRef.current.commands.setContent(markdownToHtml(content))
+        editorRef.current.commands.setContent(markdownToHtml(content), { emitUpdate: false })
         clearEditorHistory(editorRef.current)
         editorRef.current.chain().setTextSelection(0).focus().run()
         isLoadingContentRef.current = false
@@ -903,7 +903,7 @@ function App() {
       ))
       if (docId === activeDocIdRef.current && editorRef.current) {
         isLoadingContentRef.current = true
-        editorRef.current.commands.setContent(markdownToHtml(content))
+        editorRef.current.commands.setContent(markdownToHtml(content), { emitUpdate: false })
         clearEditorHistory(editorRef.current)
         editorRef.current.chain().setTextSelection(0).focus().run()
         isLoadingContentRef.current = false
@@ -941,7 +941,7 @@ function App() {
       if (editorRef.current) {
         isLoadingContentRef.current = true
         const html = markdownToHtml(content)
-        editorRef.current.commands.setContent(html)
+        editorRef.current.commands.setContent(html, { emitUpdate: false })
         clearEditorHistory(editorRef.current)
         editorRef.current.chain().setTextSelection(0).focus().run()
         setTimeout(() => {
@@ -971,7 +971,7 @@ function App() {
     if (editorRef.current) {
       isLoadingContentRef.current = true
       const html = markdownToHtml(content)
-      editorRef.current.commands.setContent(html)
+      editorRef.current.commands.setContent(html, { emitUpdate: false })
       clearEditorHistory(editorRef.current)
       editorRef.current.chain().setTextSelection(0).focus().run()
       setTimeout(() => {

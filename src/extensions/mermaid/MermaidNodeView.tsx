@@ -122,7 +122,7 @@ export function MermaidNodeView({ node, editor, extension, getPos }: NodeViewPro
           </button>
         </div>
         <pre>
-          <NodeViewContent as="code" className="language-mermaid" spellCheck={false} />
+          <NodeViewContent<'code'> as="code" className="language-mermaid" spellCheck={false} />
         </pre>
       </NodeViewWrapper>
     )
@@ -165,7 +165,7 @@ export function MermaidNodeView({ node, editor, extension, getPos }: NodeViewPro
           </div>
         )}
         {/* The source must stay mounted so ProseMirror keeps its contentDOM. */}
-        <NodeViewContent as="code" style={{ display: 'none' }} />
+        <NodeViewContent<'code'> as="code" style={{ display: 'none' }} />
       </div>
     </NodeViewWrapper>
   )

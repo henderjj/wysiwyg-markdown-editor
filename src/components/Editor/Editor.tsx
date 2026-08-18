@@ -6,10 +6,7 @@ import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import Placeholder from '@tiptap/extension-placeholder'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
-import Table from '@tiptap/extension-table'
-import TableRow from '@tiptap/extension-table-row'
-import TableCell from '@tiptap/extension-table-cell'
-import TableHeader from '@tiptap/extension-table-header'
+import { Table, TableRow, TableCell, TableHeader } from '@tiptap/extension-table'
 import Image from '@tiptap/extension-image'
 import Typography from '@tiptap/extension-typography'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
@@ -306,6 +303,24 @@ function createExtensions(markdownShortcuts: boolean, onExpandDiagram?: (source:
       code: {
         HTMLAttributes: { spellcheck: 'false' },
       },
+      // v3 StarterKit newly bundles these four extensions, none of which
+      // existed as StarterKit defaults in v2. Disabled here to keep behavior
+      // identical rather than pick up new defaults as a side effect of the
+      // version bump.
+      //
+      // link: we register Link separately below with autolink disabled --
+      // a second registration here would risk silently reverting that.
+      link: false,
+      // underline: Ctrl+U is documented in the shortcuts dialogs but has
+      // never done anything; enabling it needs a markdown representation
+      // decided first, since GFM has no underline syntax. Separate piece
+      // of work.
+      underline: false,
+      // trailingNode: would append an empty paragraph after tables, code
+      // blocks, Mermaid diagrams and horizontal rules, changing saved
+      // markdown output. Off to protect round-trip fidelity -- see
+      // markdownRoundtrip.test.ts.
+      trailingNode: false,
     }),
     BulletList.extend({
       addAttributes() {
@@ -521,6 +536,12 @@ export function Editor({ content = '', onUpdate, onEditorReady, markdownShortcut
   const editor = useEditor({
     extensions,
     content,
+    // v3 defaults this to false. MenuBar reads editor.isActive(...) directly
+    // during render at ~24 call sites, and SearchBar reads editor.storage
+    // during render for the match counter -- both would stop updating live
+    // without this. The v3-native fix is a useEditorState-based refactor of
+    // those two components; treat that as separate follow-up work.
+    shouldRerenderOnTransaction: true,
     onUpdate: ({ editor }) => {
       onUpdate?.(editor.getHTML())
     },
@@ -544,7 +565,10 @@ export function Editor({ content = '', onUpdate, onEditorReady, markdownShortcut
   // Method to set content from outside
   const setContent = useCallback((newContent: string) => {
     if (editor) {
-      editor.commands.setContent(newContent)
+      // emitUpdate: false preserves v2 behavior for this programmatic load --
+      // v3 defaults setContent to firing onUpdate, which this app relies on
+      // NOT happening for loads (see App.tsx's isLoadingContentRef sites).
+      editor.commands.setContent(newContent, { emitUpdate: false })
     }
   }, [editor])
 

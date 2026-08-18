@@ -4,6 +4,24 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0]
+
+### Changed
+
+- Migrated to TipTap v3 (`@tiptap/*` 3.30.1, up from 2.x). Deliberately behavior-preserving: StarterKit's newly-bundled `link`, `underline`, and `trailingNode` extensions are disabled to keep saved markdown output unchanged, and `shouldRerenderOnTransaction: true` is set to keep toolbar highlighting and the search match counter updating live (v3 changed that default).
+- Reconciled the Tauri Rust crate family with the JS package family after they drifted apart across two independent Dependabot PRs (`tauri` 2.11.5, `@tauri-apps/api` 2.11.1 and matching plugins) — Tauri hard-fails the build if these disagree on major.minor.
+
+### Fixed
+
+- **Search & Replace was silently broken by the TipTap v3 migration in a way no automated check caught.** A typed search term never reached the matching logic, so the match count stayed at zero regardless of what was searched. Root cause: `this` is not a consistent object identity across this TipTap version's extension lifecycle methods (`addCommands()` vs. `addProseMirrorPlugins()`), so mutating `extension.options.searchTerm` in one and reading it in the other silently read two different objects — confirmed by direct identity comparison in a debug session, not by inference. The extension's state now lives entirely in the plugin's own ProseMirror state, driven by `tr.setMeta()`, which has no such identity hazard.
+- **A real "Maximum update depth exceeded" crash** that made the app fail to render entirely, caused by the interaction between `shouldRerenderOnTransaction: true` and the floating image/table toolbars: their `shouldShow`/`options` props were inline JSX literals, given a fresh reference every render, which fed into a TipTap-internal effect that dispatches a transaction whenever those references change — an infinite loop. Fixed by memoizing both props.
+
+Neither of the two fixes above was caught by `npm run build`, `npm run lint`, or `npm test` — all stayed green throughout. Both were found only by actually driving the app in a real browser. See `CLAUDE.md`'s "Editor Configuration" section for the full mechanism of each, kept there for the next person extending this codebase.
+
+### Security
+
+- Same `tauri`/`serde_with` versions above also clear two open Dependabot security alerts (`tauri`'s origin-confusion IPC issue, first patched at 2.11.1; `serde_with`'s panic-on-empty-map issue, fixed at 3.21.0). A `rand` advisory also cleared as a side effect — the vulnerable version dropped out of the dependency graph entirely during a full `cargo update`. A fourth alert (`glib`, needs 0.20.0) remains open — it is pulled in transitively through the whole gtk-rs stack, which is pinned to its 0.18 generation until an upstream `wry`/`tauri` release upgrades it; not fixable from this repo.
+
 ## [1.5.2]
 
 First public release.

@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { Editor } from '@tiptap/react'
-import type { SearchReplaceStorage } from '../../extensions/search-replace'
 
 interface SearchBarProps {
   editor: Editor
@@ -17,7 +16,10 @@ export function SearchBar({ editor, onClose, initialShowReplace = false }: Searc
   const [showReplace, setShowReplace] = useState(initialShowReplace)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
-  const storage = editor.storage.searchReplace as SearchReplaceStorage | undefined
+  // Storage is typed as always-present via the module augmentation in
+  // search-replace.ts, but the optional chaining stays as a runtime guard --
+  // it's cheap insurance against the extension not being registered.
+  const storage = editor.storage.searchReplace
   const matchCount = storage?.results?.length ?? 0
   const currentIndex = storage?.currentIndex ?? 0
 

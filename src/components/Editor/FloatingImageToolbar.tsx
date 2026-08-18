@@ -1,4 +1,6 @@
-import { Editor, BubbleMenu } from '@tiptap/react'
+import { useCallback, useMemo } from 'react'
+import { Editor } from '@tiptap/react'
+import { BubbleMenu } from '@tiptap/react/menus'
 
 interface FloatingImageToolbarProps {
   editor: Editor
@@ -34,19 +36,27 @@ function Separator() {
 }
 
 export function FloatingImageToolbar({ editor, onEditImage }: FloatingImageToolbarProps) {
+  // BubbleMenu's React wrapper has an internal effect keyed on [shouldShow,
+  // options, ...] whose body dispatches a ProseMirror transaction to sync
+  // them into the plugin. Passing these inline means a fresh function/object
+  // reference every render, so with shouldRerenderOnTransaction: true on
+  // useEditor (needed for live toolbar highlighting elsewhere), the loop is:
+  // transaction -> Editor re-renders -> new shouldShow/options references ->
+  // effect fires -> dispatches a transaction -> repeat. React catches this
+  // as "Maximum update depth exceeded" and the app fails to render at all --
+  // caught by a manual browser verification pass, not by the type checker or
+  // the test suite. Memoizing both breaks the cycle at its root.
+  const shouldShow = useCallback(({ editor }: { editor: Editor }) => editor.isActive('image'), [])
+  const options = useMemo(() => ({ placement: 'top' as const, offset: 10 }), [])
+
   if (!editor) return null
 
   return (
     <BubbleMenu
       editor={editor}
-      tippyOptions={{
-        duration: 100,
-        placement: 'top',
-        offset: [0, 10],
-      }}
-      shouldShow={({ editor }) => {
-        return editor.isActive('image')
-      }}
+      pluginKey="imageBubbleMenu"
+      options={options}
+      shouldShow={shouldShow}
       className="flex items-center gap-0.5 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg"
     >
       <ToolbarButton

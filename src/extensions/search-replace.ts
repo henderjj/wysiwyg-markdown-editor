@@ -1,5 +1,5 @@
 import { Extension } from '@tiptap/core'
-import { Plugin, PluginKey } from '@tiptap/pm/state'
+import { Plugin, PluginKey, EditorState } from '@tiptap/pm/state'
 import { Decoration, DecorationSet } from '@tiptap/pm/view'
 
 export interface SearchReplaceOptions {
@@ -15,7 +15,39 @@ export interface SearchReplaceStorage {
   currentIndex: number
 }
 
-const searchReplacePluginKey = new PluginKey('searchReplace')
+// Everything the plugin needs to recompute matches, carried in ProseMirror's
+// own state rather than in the extension's `options`/`storage`. See the long
+// comment above addProseMirrorPlugins() for why: `this` inside this
+// extension's various lifecycle methods is not a consistent object identity
+// in this TipTap version, so cross-method communication through it silently
+// breaks. Plugin state plus tr.setMeta() has no such problem -- it is always
+// the live, canonical state for this editor.
+interface SearchPluginState {
+  searchTerm: string
+  caseSensitive: boolean
+  wholeWord: boolean
+  regex: boolean
+  results: { from: number; to: number }[]
+  currentIndex: number
+  decorations: DecorationSet
+}
+
+const searchReplacePluginKey = new PluginKey<SearchPluginState>('searchReplace')
+
+// editor.storage.searchReplace is the extension's public, documented surface
+// (read by SearchBar.tsx and consumers outside this file). Mirror the
+// authoritative plugin state into it here, using the `editor` a command was
+// invoked with -- which is always correct, unlike extension.options/storage
+// accessed via `this` in a different lifecycle method.
+function syncStorageFromPlugin(editor: {
+  state: EditorState
+  storage: { searchReplace: SearchReplaceStorage }
+}) {
+  const pluginState = searchReplacePluginKey.getState(editor.state)
+  if (!pluginState) return
+  editor.storage.searchReplace.results = pluginState.results
+  editor.storage.searchReplace.currentIndex = pluginState.currentIndex
+}
 
 function findMatches(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -117,93 +149,108 @@ export const SearchReplace = Extension.create<SearchReplaceOptions, SearchReplac
   },
 
   addCommands() {
+    // Genuine v3 regression, confirmed empirically via a manual browser
+    // verification pass (not caught by the type checker or the test suite):
+    // `this` inside this extension's various lifecycle methods
+    // (addCommands/addProseMirrorPlugins) is not a consistent object
+    // identity. Writing extension.options.searchTerm here and reading
+    // extension.options.searchTerm inside addProseMirrorPlugins()'s apply()
+    // silently read two different objects -- confirmed by logging identity
+    // and values directly. A typed search term therefore never reached the
+    // plugin, and the match count stayed at zero no matter what was typed.
+    // editor.extensionManager.extensions.find(e => e.name === 'searchReplace')
+    // is similarly unreliable and must not be used either.
+    //
+    // Fix: the plugin carries its own complete state (searchTerm included),
+    // driven entirely by tr.setMeta()/tr.docChanged in apply() below -- see
+    // SearchPluginState. That path only touches ProseMirror's state, which is
+    // always canonical, so it has no equivalent identity hazard.
+    // editor.storage.searchReplace remains the extension's public surface
+    // (read by SearchBar.tsx); syncStorageFromPlugin() mirrors the plugin's
+    // results/currentIndex into it using the *command's own* `editor`
+    // parameter, which is reliable -- unlike `this`, it's never substituted.
+    //
+    // The one field kept on `this.options` is replaceTerm, which the plugin
+    // does not need to know about (it doesn't affect matching) and which is
+    // only ever read back from within this same addCommands() closure --
+    // self-consistent, since it's the same `extension` reference throughout.
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const extension = this
     return {
       setSearchTerm: (searchTerm: string) => ({ editor }) => {
-        editor.extensionManager.extensions
-          .find(e => e.name === 'searchReplace')!
-          .options.searchTerm = searchTerm
-        // Force plugin state update
         const { tr } = editor.state
         tr.setMeta(searchReplacePluginKey, { searchTerm })
         editor.view.dispatch(tr)
+        syncStorageFromPlugin(editor)
         return true
       },
 
-      setReplaceTerm: (replaceTerm: string) => ({ editor }) => {
-        editor.extensionManager.extensions
-          .find(e => e.name === 'searchReplace')!
-          .options.replaceTerm = replaceTerm
+      setReplaceTerm: (replaceTerm: string) => () => {
+        extension.options.replaceTerm = replaceTerm
         return true
       },
 
       setCaseSensitive: (caseSensitive: boolean) => ({ editor }) => {
-        editor.extensionManager.extensions
-          .find(e => e.name === 'searchReplace')!
-          .options.caseSensitive = caseSensitive
         const { tr } = editor.state
         tr.setMeta(searchReplacePluginKey, { caseSensitive })
         editor.view.dispatch(tr)
+        syncStorageFromPlugin(editor)
         return true
       },
 
       setWholeWord: (wholeWord: boolean) => ({ editor }) => {
-        editor.extensionManager.extensions
-          .find(e => e.name === 'searchReplace')!
-          .options.wholeWord = wholeWord
         const { tr } = editor.state
         tr.setMeta(searchReplacePluginKey, { wholeWord })
         editor.view.dispatch(tr)
+        syncStorageFromPlugin(editor)
         return true
       },
 
       setRegex: (useRegex: boolean) => ({ editor }) => {
-        editor.extensionManager.extensions
-          .find(e => e.name === 'searchReplace')!
-          .options.regex = useRegex
         const { tr } = editor.state
         tr.setMeta(searchReplacePluginKey, { regex: useRegex })
         editor.view.dispatch(tr)
+        syncStorageFromPlugin(editor)
         return true
       },
 
       goToNextMatch: () => ({ editor }) => {
-        const { results, currentIndex } = editor.storage.searchReplace as SearchReplaceStorage
+        const { results, currentIndex } = editor.storage.searchReplace
         if (results.length === 0) return false
         const nextIndex = (currentIndex + 1) % results.length
-        ;(editor.storage.searchReplace as SearchReplaceStorage).currentIndex = nextIndex
         const match = results[nextIndex]
         editor.commands.setTextSelection({ from: match.from, to: match.to })
         // Force decoration update
         const { tr } = editor.state
         tr.setMeta(searchReplacePluginKey, { currentIndex: nextIndex })
         editor.view.dispatch(tr)
+        syncStorageFromPlugin(editor)
         // Scroll AFTER decorations are updated in the DOM
         requestAnimationFrame(() => scrollToSelection(editor))
         return true
       },
 
       goToPrevMatch: () => ({ editor }) => {
-        const { results, currentIndex } = editor.storage.searchReplace as SearchReplaceStorage
+        const { results, currentIndex } = editor.storage.searchReplace
         if (results.length === 0) return false
         const prevIndex = (currentIndex - 1 + results.length) % results.length
-        ;(editor.storage.searchReplace as SearchReplaceStorage).currentIndex = prevIndex
         const match = results[prevIndex]
         editor.commands.setTextSelection({ from: match.from, to: match.to })
         const { tr } = editor.state
         tr.setMeta(searchReplacePluginKey, { currentIndex: prevIndex })
         editor.view.dispatch(tr)
+        syncStorageFromPlugin(editor)
         // Scroll AFTER decorations are updated in the DOM
         requestAnimationFrame(() => scrollToSelection(editor))
         return true
       },
 
       replaceCurrent: () => ({ editor }) => {
-        const storage = editor.storage.searchReplace as SearchReplaceStorage
+        const storage = editor.storage.searchReplace
         const { results, currentIndex } = storage
         if (results.length === 0) return false
         const match = results[currentIndex]
-        const replaceTerm = editor.extensionManager.extensions
-          .find(e => e.name === 'searchReplace')!.options.replaceTerm
+        const replaceTerm = extension.options.replaceTerm
         editor.chain()
           .setTextSelection({ from: match.from, to: match.to })
           .deleteSelection()
@@ -213,11 +260,10 @@ export const SearchReplace = Extension.create<SearchReplaceOptions, SearchReplac
       },
 
       replaceAll: () => ({ editor }) => {
-        const storage = editor.storage.searchReplace as SearchReplaceStorage
+        const storage = editor.storage.searchReplace
         const { results } = storage
         if (results.length === 0) return false
-        const replaceTerm = editor.extensionManager.extensions
-          .find(e => e.name === 'searchReplace')!.options.replaceTerm
+        const replaceTerm = extension.options.replaceTerm
         // Replace from end to start to preserve positions
         const sorted = [...results].sort((a, b) => b.from - a.from)
         const { tr } = editor.state
@@ -225,58 +271,67 @@ export const SearchReplace = Extension.create<SearchReplaceOptions, SearchReplac
           tr.replaceWith(match.from, match.to, replaceTerm ? editor.state.schema.text(replaceTerm) : editor.state.schema.text(''))
         }
         editor.view.dispatch(tr)
+        syncStorageFromPlugin(editor)
         return true
       },
     }
   },
 
   addProseMirrorPlugins() {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias -- standard TipTap pattern: inner plugin callbacks rebind `this`
-    const extension = this
-
     return [
-      new Plugin({
+      new Plugin<SearchPluginState>({
         key: searchReplacePluginKey,
         state: {
           init() {
-            return DecorationSet.empty
+            // Hardcoded rather than read from `this.options`: see the long
+            // comment in addCommands() -- extension identity is not reliable
+            // to read from inside these lifecycle methods, and these match
+            // the same literal defaults addOptions() declares.
+            return {
+              searchTerm: '',
+              caseSensitive: false,
+              wholeWord: false,
+              regex: false,
+              results: [],
+              currentIndex: 0,
+              decorations: DecorationSet.empty,
+            }
           },
-          apply(tr, oldDecorations) {
+          apply(tr, oldState) {
+            const meta = tr.getMeta(searchReplacePluginKey)
             // Only recalculate if search params changed or doc changed
-            if (!tr.getMeta(searchReplacePluginKey) && !tr.docChanged) {
-              return oldDecorations
+            if (!meta && !tr.docChanged) {
+              return oldState
             }
 
-            const { searchTerm, caseSensitive, wholeWord, regex } = extension.options
-            if (!searchTerm) {
-              ;(extension.storage as SearchReplaceStorage).results = []
-              ;(extension.storage as SearchReplaceStorage).currentIndex = 0
-              return DecorationSet.empty
+            const next = { ...oldState, ...meta }
+
+            if (!next.searchTerm) {
+              return { ...next, results: [], currentIndex: 0, decorations: DecorationSet.empty }
             }
 
-            const results = findMatches(tr.doc, searchTerm, caseSensitive, wholeWord, regex)
-            ;(extension.storage as SearchReplaceStorage).results = results
+            const results = findMatches(tr.doc, next.searchTerm, next.caseSensitive, next.wholeWord, next.regex)
 
             // Clamp currentIndex
-            const storage = extension.storage as SearchReplaceStorage
-            if (storage.currentIndex >= results.length) {
-              storage.currentIndex = 0
+            let currentIndex = next.currentIndex
+            if (currentIndex >= results.length) {
+              currentIndex = 0
             }
 
             const decorations = results.map((match, index) =>
               Decoration.inline(match.from, match.to, {
-                class: index === storage.currentIndex
+                class: index === currentIndex
                   ? 'search-match-current'
                   : 'search-match',
               })
             )
 
-            return DecorationSet.create(tr.doc, decorations)
+            return { ...next, results, currentIndex, decorations: DecorationSet.create(tr.doc, decorations) }
           },
         },
         props: {
           decorations(state) {
-            return this.getState(state)
+            return this.getState(state)?.decorations
           },
         },
       }),
@@ -296,6 +351,13 @@ function scrollToSelection(editor: { view: { domAtPos: (pos: number) => { node: 
 
 // Extend TipTap Commands interface
 declare module '@tiptap/core' {
+  // v3 made editor.storage a typed, augmentable interface (empty by default)
+  // rather than Record<string, any> -- without this, every
+  // editor.storage.searchReplace access is a type error.
+  interface Storage {
+    searchReplace: SearchReplaceStorage
+  }
+
   interface Commands<ReturnType> {
     searchReplace: {
       setSearchTerm: (term: string) => ReturnType
