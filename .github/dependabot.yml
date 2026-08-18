@@ -14,13 +14,27 @@ updates:
       # TipTap packages share a version and are meant to move in lockstep --
       # a PR bumping one @tiptap/* package on its own can break the editor at
       # runtime even though it installs cleanly. Always update them together.
+      #
+      # update-types is required here, not optional: without it this group has
+      # no restriction at all and will happily bundle a major version bump into
+      # one mergeable-looking PR. That is exactly how a 2.x->3.x Tiptap jump
+      # once got through as a single green-looking PR -- majors need to arrive
+      # separately so they get read, not merged on autopilot.
       tiptap:
         patterns:
           - "@tiptap/*"
-      # Same reasoning for the Tauri JS packages, which track the Rust crates.
+        update-types:
+          - minor
+          - patch
+      # Same reasoning for the Tauri JS packages, which track the Rust crates
+      # in src-tauri/Cargo.toml below -- see the note on that ecosystem entry
+      # for the cross-ecosystem hazard this pairing creates.
       tauri:
         patterns:
           - "@tauri-apps/*"
+        update-types:
+          - minor
+          - patch
       # Everything else, bundled by risk level so routine upgrades arrive as a
       # couple of reviewable PRs rather than a dozen. Major versions are
       # deliberately excluded from these groups and so arrive individually,
@@ -38,10 +52,34 @@ updates:
         update-types:
           - minor
           - patch
+    # A major bump for either of these, if merely left ungrouped by the
+    # restriction above, would arrive as one individual PR PER PACKAGE --
+    # 15 of them for Tiptap. Suppress majors outright instead; do that
+    # upgrade as a deliberate, manually-scoped piece of work when it's worth
+    # doing, not as an avalanche of PRs to individually close.
+    ignore:
+      - dependency-name: "@tiptap/*"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "@tauri-apps/*"
+        update-types:
+          - "version-update:semver-major"
 
   # ---------------------------------------------------------------------------
   # Cargo — the Tauri desktop shell. Monthly: the Rust dependencies are few and
   # move slowly, and every PR here triggers a three-platform desktop build.
+  #
+  # Cross-ecosystem hazard: Tauri ships as a Rust crate family (here) plus a
+  # matching JS package family (the "tauri" group in the npm block above), and
+  # `tauri build` hard-fails if their major.minor versions disagree. Dependabot
+  # has no way to express "bump these together" across two ecosystems -- each
+  # side gets bumped in its own PR, independently, on its own schedule. Do NOT
+  # merge a cargo tauri* bump and an npm @tauri-apps/* bump as two separate,
+  # unrelated PRs. Merge them together, or reconcile with a fresh `cargo
+  # update` / `npm install` on whichever side lagged, and confirm with
+  # `npm run tauri:build` before pushing -- CI's "version mismatched Tauri
+  # packages" error is that exact check catching a real problem, not a false
+  # alarm to route around.
   # ---------------------------------------------------------------------------
   - package-ecosystem: cargo
     directory: "/src-tauri"
@@ -53,6 +91,15 @@ updates:
         update-types:
           - minor
           - patch
+    ignore:
+      # Same reasoning as the npm ignore rules above: a Tauri major would
+      # otherwise fall through this group's minor/patch restriction and
+      # arrive as one individual PR per crate (tauri, tauri-build, and every
+      # tauri-plugin-*). Handle a major bump as deliberate, coordinated work
+      # across both ecosystems instead.
+      - dependency-name: "tauri*"
+        update-types:
+          - "version-update:semver-major"
 
   # ---------------------------------------------------------------------------
   # GitHub Actions themselves. This is what would have flagged the Node 20
