@@ -168,6 +168,13 @@ function App() {
   const [showUserGuideDialog, setShowUserGuideDialog] = useState(false)
   const [showAboutDialog, setShowAboutDialog] = useState(false)
   const [searchBarMode, setSearchBarMode] = useState<'find' | 'findReplace' | null>(null)
+  // Undo/redo availability, kept in real state and updated via a transaction
+  // listener (set up in handleEditorReady) rather than read from editorRef
+  // during render -- ref mutations don't trigger re-renders, so a render-time
+  // read here could show stale button state between an undo-stack change and
+  // whatever unrelated update next re-renders the app.
+  const [canUndo, setCanUndo] = useState(false)
+  const [canRedo, setCanRedo] = useState(false)
   const [zoom, setZoom] = useState(loadZoom)
   const [recentFiles, setRecentFiles] = useState<string[]>(loadRecentFiles)
   const [autoSaveToFile, setAutoSaveToFile] = useState(() => localStorage.getItem(AUTO_SAVE_FILE_KEY) === 'true')
@@ -195,6 +202,9 @@ function App() {
 
   const autoSaveFileTimeoutRef = useRef<number | null>(null)
   const editorRef = useRef<TiptapEditor | null>(null)
+  // Tracks the current editor's transaction listener so it can be detached
+  // before a new one is attached on remount (markdownShortcuts toggle).
+  const undoRedoCleanupRef = useRef<(() => void) | null>(null)
   const autoSaveTimeoutRef = useRef<number | null>(null)
   const isLoadingContentRef = useRef(false)
   const editorInitializedRef = useRef(false)
@@ -332,7 +342,27 @@ function App() {
   }, [])
 
   const handleEditorReady = useCallback((editor: TiptapEditor | null) => {
+    // Detach the previous editor's transaction listener before attaching a
+    // new one -- handleEditorReady runs again on remount (markdownShortcuts
+    // toggle), and the old editor instance would otherwise leak a listener.
+    undoRedoCleanupRef.current?.()
+    undoRedoCleanupRef.current = null
+
     editorRef.current = editor
+
+    if (editor) {
+      const updateUndoRedo = () => {
+        setCanUndo(editor.can().undo())
+        setCanRedo(editor.can().redo())
+      }
+      updateUndoRedo()
+      editor.on('transaction', updateUndoRedo)
+      undoRedoCleanupRef.current = () => editor.off('transaction', updateUndoRedo)
+    } else {
+      setCanUndo(false)
+      setCanRedo(false)
+    }
+
     // Only load content once when editor first initializes
     if (editor && !editorInitializedRef.current) {
       editorInitializedRef.current = true
@@ -379,6 +409,11 @@ function App() {
       })
     }
   }, [updateStatusInfo]) // updateStatusInfo is stable (no deps)
+
+  const markRecentlySaved = useCallback((docId: string) => {
+    recentlySavedRef.current.add(docId)
+    setTimeout(() => recentlySavedRef.current.delete(docId), 3000)
+  }, [])
 
   const handleUpdate = useCallback(() => {
     updateStatusInfo()
@@ -433,11 +468,6 @@ function App() {
       }, 4000)
     }
   }, [updateStatusInfo, showPreview, activeDocId, markDirty, autoSaveToFile])
-
-  const markRecentlySaved = useCallback((docId: string) => {
-    recentlySavedRef.current.add(docId)
-    setTimeout(() => recentlySavedRef.current.delete(docId), 3000)
-  }, [])
 
   const handleSave = useCallback(async () => {
     if (!editorRef.current) return
@@ -1499,8 +1529,8 @@ if (action.startsWith('file.openRecent:')) {
             markdownShortcuts,
             showDocumentMap,
             theme,
-            canUndo: editorRef.current?.can().undo() ?? false,
-            canRedo: editorRef.current?.can().redo() ?? false,
+            canUndo,
+            canRedo,
             recentFiles,
             autoSaveToFile,
             restorePreviousSession: restoreSession,
@@ -1738,6 +1768,12 @@ if (action.startsWith('file.openRecent:')) {
         {/* Document Map */}
         {showDocumentMap && (
           <DocumentMap
+            // DocumentMap only touches `editor` inside effects/handlers
+            // (subscriptions), never during its own render, so a stale
+            // reference here is not the same risk as the canUndo/canRedo
+            // case above -- it's a reference hand-off, not a value computed
+            // fresh from the ref every render.
+            // eslint-disable-next-line react-hooks/refs
             editor={editorRef.current}
             onClose={() => { setShowDocumentMap(false); localStorage.setItem(SHOW_DOCMAP_KEY, 'false') }}
             activeDocId={activeDocId}

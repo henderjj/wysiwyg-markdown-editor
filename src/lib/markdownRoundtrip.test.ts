@@ -183,6 +183,16 @@ describe('markdownToHtml', () => {
       expect(html).toContain('<td><p>1</p></td>')
       expect(html).toContain('<td><p>2</p></td>')
     })
+    it('escaped pipe in a cell stays one cell, not two', () => {
+      // Regression test: the row splitter used to split on every `|`
+      // including an escaped one, corrupting the column count.
+      const md = '| A | B |\n| --- | --- |\n| foo\\|bar | baz |'
+      const html = markdownToHtml(md)
+      expect(html).toContain('<td><p>foo|bar</p></td>')
+      expect(html).toContain('<td><p>baz</p></td>')
+      // Exactly two data cells, not three.
+      expect((html.match(/<td>/g) || []).length).toBe(2)
+    })
   })
 
   describe('horizontal rules', () => {
@@ -474,6 +484,17 @@ describe('roundtrip: markdown → HTML → markdown', () => {
       const result = roundtrip(md)
       expect(result).toContain('| a | b |')
       expect(result).toContain('| c | d |')
+    })
+    it('table cell with an escaped pipe roundtrips without gaining a column', () => {
+      const md = '| A | B |\n| --- | --- |\n| foo\\|bar | baz |'
+      const result = roundtrip(md)
+      expect(result).toContain('| foo\\|bar | baz |')
+      // Re-importing the roundtripped output must still see exactly 2 data
+      // cells (foo|bar, baz), confirming the escaped pipe never became a
+      // real column boundary at any stage of the cycle.
+      const html = markdownToHtml(result)
+      expect(html).toContain('<td><p>foo|bar</p></td>')
+      expect((html.match(/<td>/g) || []).length).toBe(2)
     })
   })
 

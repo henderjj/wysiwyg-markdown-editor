@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+# Neither job needs to write anything -- lint/test/build only reads the repo.
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Lint, test, build

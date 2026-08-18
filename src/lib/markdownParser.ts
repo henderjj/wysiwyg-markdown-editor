@@ -177,11 +177,11 @@ export function markdownToHtml(markdown: string): string {
         continue
       }
 
-      // Parse the cells
-      const cells = line
-        .trim()
-        .slice(1, -1) // Remove leading and trailing |
-        .split('|')
+      // Parse the cells. Split on `|` but not on `\|` (an escaped pipe
+      // meant as literal cell content) -- a plain .split('|') would break
+      // a cell like `foo\|bar` into two cells, silently corrupting the
+      // column count. See splitTableRow for the escape-parity rule.
+      const cells = splitTableRow(line.trim().slice(1, -1)) // slice removes the row's own leading/trailing |
         .map(cell => cell.trim())
 
       if (!state.inTable) {
@@ -332,6 +332,34 @@ function closeBlockquote(result: string[], state: ParseState): void {
   state.inBlockquote = false
   state.blockquoteLines = []
   state.blockquoteWasClosed = true
+}
+
+/**
+ * Splits a table row's cell content on `|`, treating a `|` preceded by an
+ * odd number of backslashes as an escaped, literal pipe rather than a column
+ * delimiter (so `\|` doesn't split, but `\\|` does -- the leading `\\` is
+ * itself an escaped backslash, per CommonMark backslash-escape parity).
+ * The escaped `\|` sequence is left intact in the resulting cell text;
+ * parseInline() converts it to a literal `|` later, the same as any other
+ * backslash escape (`|` is in ESCAPABLE_PUNCTUATION).
+ */
+function splitTableRow(row: string): string[] {
+  const cells: string[] = []
+  let current = ''
+  let backslashRun = 0
+
+  for (const ch of row) {
+    if (ch === '|' && backslashRun % 2 === 0) {
+      cells.push(current)
+      current = ''
+    } else {
+      current += ch
+    }
+    backslashRun = ch === '\\' ? backslashRun + 1 : 0
+  }
+  cells.push(current)
+
+  return cells
 }
 
 function closeTable(result: string[], state: ParseState): void {

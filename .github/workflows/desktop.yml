@@ -18,6 +18,11 @@ on:
       - 'package-lock.json'
   workflow_dispatch:
 
+# Builds and uploads artifacts via actions/upload-artifact, which needs no
+# special permission beyond reading the repo.
+permissions:
+  contents: read
+
 jobs:
   build:
     name: ${{ matrix.label }}

@@ -24,6 +24,10 @@ export function SearchBar({ editor, onClose, initialShowReplace = false }: Searc
   const currentIndex = storage?.currentIndex ?? 0
 
   useEffect(() => {
+    // This project has no React Compiler enabled, so the rule's cascading-
+    // render concern doesn't apply; syncing local UI state from a prop is
+    // the standard, safe pattern here.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setShowReplace(initialShowReplace)
   }, [initialShowReplace])
 

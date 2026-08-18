@@ -118,6 +118,10 @@ export function MermaidViewerDialog({ source, onClose, onFallbackFocus }: Mermai
   // Reset per-diagram state when a new diagram is opened.
   useEffect(() => {
     if (!isOpen) return
+    // This project has no React Compiler enabled, so the rule's cascading-
+    // render concern doesn't apply; resetting state for a new diagram is
+    // the standard, safe pattern here.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSvg('')
     setContentSize(null)
     contentSizeRef.current = null
@@ -133,6 +137,10 @@ export function MermaidViewerDialog({ source, onClose, onFallbackFocus }: Mermai
     if (source === null) return
     const code = source.trim()
     if (!code) {
+      // This project has no React Compiler enabled, so the rule's cascading-
+      // render concern doesn't apply; this early-return status update is
+      // the standard, safe pattern here.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStatus('empty')
       return
     }

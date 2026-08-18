@@ -64,6 +64,34 @@ updates:
       - dependency-name: "@tauri-apps/*"
         update-types:
           - "version-update:semver-major"
+      # The ESLint/TypeScript toolchain is peer-interdependent the same way:
+      # eslint, @eslint/js, eslint-plugin-react-hooks, typescript and
+      # typescript-eslint all constrain each other's acceptable versions, and
+      # each is a separate npm package so a major in any one falls through
+      # the minor/patch-restricted groups above and arrives as its own PR.
+      # Confirmed in practice: bumping eslint alone to 10.x, or @eslint/js
+      # alone, or typescript alone, each broke `npm ci` outright with an
+      # ERESOLVE peer-dependency conflict against the others -- and
+      # typescript-eslint in particular can lag a new TypeScript major by a
+      # long, unpredictable margin (at the time of writing, its newest
+      # published version -- including its canary channel -- still caps
+      # typescript at "<6.1.0"; there is no version that accepts TS7 yet).
+      # Bump this group together, deliberately, the same shape as this one.
+      - dependency-name: "eslint"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "@eslint/js"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "eslint-plugin-react-hooks"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "typescript"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "typescript-eslint"
+        update-types:
+          - "version-update:semver-major"
 
   # ---------------------------------------------------------------------------
   # Cargo — the Tauri desktop shell. Monthly: the Rust dependencies are few and

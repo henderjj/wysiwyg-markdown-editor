@@ -274,6 +274,17 @@ turndownService.addRule('table', {
       const cells = Array.from(row.querySelectorAll('th, td'))
       const cellContents = cells.map((cell) => {
         // Convert cell HTML to markdown to preserve inline formatting (bold, code, etc.)
+        //
+        // A literal backslash does not need escaping here before the pipe
+        // replacement below: turndownService's own `escape` step already
+        // escapes every literal backslash to `\\` (see the "escape handling"
+        // notes in CLAUDE.md), so `\|` in the output below always means
+        // "one escaped pipe" and never collides with an unescaped user
+        // backslash. Verified by round-trip test (see markdownRoundtrip.test.ts
+        // "GFM table" cases with a literal `|` and with a literal `\|` in a
+        // cell) -- the actual bug this was suspected of was in the importer's
+        // table-row splitter (markdownParser.ts's splitTableRow), which used
+        // to split on every `|` including an escaped one; that is fixed there.
         const text = turndownService.turndown(cell.innerHTML || '')
           .trim()
           .replace(/\|/g, '\\|')

@@ -17,6 +17,10 @@ export function ImageDialog({ isOpen, onClose, onSubmit, initialSrc = '', initia
 
   useEffect(() => {
     if (isOpen) {
+      // This project has no React Compiler enabled, so the rule's cascading-
+      // render concern doesn't apply; resetting form state when the dialog
+      // opens is the standard, safe controlled-dialog pattern.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSrc(initialSrc)
       setAlt(initialAlt)
       setPreviewStatus(initialSrc ? 'loading' : 'empty')

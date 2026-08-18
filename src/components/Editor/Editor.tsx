@@ -562,23 +562,6 @@ export function Editor({ content = '', onUpdate, onEditorReady, markdownShortcut
     }
   }, [editor, onEditorReady])
 
-  // Method to set content from outside
-  const setContent = useCallback((newContent: string) => {
-    if (editor) {
-      // emitUpdate: false preserves v2 behavior for this programmatic load --
-      // v3 defaults setContent to firing onUpdate, which this app relies on
-      // NOT happening for loads (see App.tsx's isLoadingContentRef sites).
-      editor.commands.setContent(newContent, { emitUpdate: false })
-    }
-  }, [editor])
-
-  // Expose setContent through a custom attribute on the component
-  useEffect(() => {
-    if (editor) {
-      (editor as ReturnType<typeof useEditor> & { setContent: typeof setContent }).setContent = setContent
-    }
-  }, [editor, setContent])
-
   const handleEditImage = useCallback(() => {
     if (!editor) return
     const attrs = editor.getAttributes('image')

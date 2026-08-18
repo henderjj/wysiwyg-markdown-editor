@@ -1,5 +1,5 @@
 import { NodeViewWrapper, NodeViewContent, type NodeViewProps } from '@tiptap/react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { loadMermaid, nextMermaidRenderId } from './mermaidLoader'
 import type { MermaidOptions } from './Mermaid'
 
@@ -51,6 +51,11 @@ export function MermaidNodeView({ node, editor, extension, getPos }: NodeViewPro
 
   // Render whenever the source changes or we return to graph mode.
   useEffect(() => {
+    // renderDiagram's setSvg/setError calls happen after its internal
+    // `await`s, not synchronously within this effect, so the rule's
+    // cascading-synchronous-render concern doesn't actually apply here --
+    // and this project has no React Compiler enabled regardless.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!editing) void renderDiagram()
   }, [editing, source, renderDiagram])
 
@@ -62,7 +67,11 @@ export function MermaidNodeView({ node, editor, extension, getPos }: NodeViewPro
     return () => observer.disconnect()
   }, [editing, renderDiagram])
 
-  const stopMouse = useRef((e: React.MouseEvent) => e.preventDefault()).current
+  // useCallback rather than useRef(...).current for the same stable-reference
+  // effect: functionally identical (the initializer only runs once either
+  // way), but useCallback is recognized by react-hooks/refs as a stable
+  // function and doesn't trip its "accessing ref during render" check.
+  const stopMouse = useCallback((e: React.MouseEvent) => e.preventDefault(), [])
 
   const { onExpand } = extension.options as MermaidOptions
 

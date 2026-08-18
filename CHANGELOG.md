@@ -4,6 +4,25 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.1]
+
+### Fixed
+
+- **Undo/redo toolbar buttons could show stale enabled/disabled state.** `canUndo`/`canRedo` were read directly from a ref during render, which doesn't trigger a re-render when the underlying value changes (e.g. via a keyboard-shortcut-triggered undo, which bypasses the toolbar's own click handler). Now tracked as real state, updated via a transaction listener. Verified in a real browser across both the toolbar-click and keyboard-shortcut paths.
+- **A table cell containing a literal `|` no longer corrupts the table's column count on import.** The row splitter did a plain `.split('|')` with no awareness of escaped pipes, so `\|` (produced correctly by the exporter) was never honored on the way back in — it silently split one cell into two. Found while investigating a CodeQL alert on the exporter's escaping, which turned out to point at a symptom rather than the actual bug; the exporter itself needed no change (Turndown already escapes literal backslashes, which is what made a full round trip work once the importer was fixed). Two regression tests added.
+- Removed a small amount of dead code in `Editor.tsx` (an unused `setContent` method attached to the TipTap editor instance, superseded by direct `editor.commands.setContent()` calls elsewhere) that a stricter new lint rule correctly flagged as mutating a hook's return value.
+
+### Changed
+
+- Updated the ESLint/TypeScript-adjacent toolchain: `eslint` 9→10, `@eslint/js` 9→10, `eslint-plugin-react-hooks` 5→7.1 (bumped together — each alone fails to install due to peer-dependency conflicts against the others). `typescript` and `typescript-eslint` are intentionally **not** bumped: `typescript-eslint` has no published version (including its canary channel) supporting TypeScript 7 yet.
+- `eslint-plugin-react-hooks` v7 bundles React Compiler-powered lint rules new to this project. Of the 21 findings this surfaced: one was a genuine declaration-order fix (mechanical, in `App.tsx`), one was the undo/redo staleness above (a real fix), and the remainder were the standard "sync/reset state from a changed dependency" effect pattern — safe and idiomatic, and only flagged because this project has no React Compiler enabled to actually benefit from the stricter analysis. Those are suppressed with an inline reason at each site rather than restructured.
+- Hardened `.github/dependabot.yml` again: the ESLint/TypeScript toolchain turned out to have the identical cross-package coordination hazard as `@tiptap/*`/`@tauri-apps/*` (see 1.6.0) — a major in any one package broke `npm ci` against the others. Added the same `ignore` treatment for major-version bumps to this group.
+- Added `permissions: contents: read` to `ci.yml` and `desktop.yml` (flagged by CodeQL; `release.yml` already had an explicit block).
+
+### Security
+
+- Dismissed two CodeQL `js/xss-through-dom` alerts on `ImageDialog.tsx` as false positives: both are React `<img src>` bindings, which are a URL-fetch sink, not an HTML-interpretation sink — the rule's actual concern (DOM text reinterpreted as HTML) doesn't apply to that binding.
+
 ## [1.6.0]
 
 ### Changed

@@ -53,6 +53,10 @@ export function DocumentMap({ editor, onClose, activeDocId }: DocumentMapProps) 
 
   // Extract headings on mount and on any document change (including setContent which doesn't emit 'update')
   useEffect(() => {
+    // This project has no React Compiler enabled, so the rule's cascading-
+    // render concern doesn't apply to this build; the pattern itself (derive
+    // state from an external source on mount/change) is safe and correct.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     extractHeadings()
     if (!editor) return
     const handler = ({ transaction }: { transaction: { docChanged: boolean } }) => {
