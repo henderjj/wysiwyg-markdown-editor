@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { loadMermaid, nextMermaidRenderId } from './mermaidLoader'
 import {
   clampViewport,
@@ -48,7 +49,7 @@ function ToolbarButton({
       aria-label={label}
       title={label}
       disabled={disabled}
-      className="px-2 py-1 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+      className="px-2 py-1 text-sm rounded-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
     >
       {children}
     </button>
@@ -75,7 +76,6 @@ export function MermaidViewerDialog({ source, onClose, onFallbackFocus }: Mermai
 
   const panelRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<HTMLDivElement>(null)
-  const stageRef = useRef<HTMLDivElement>(null)
   // Mirrors `viewport` so the drag/wheel handlers read the latest value without
   // being re-created (and re-bound) on every frame.
   const viewportRef = useRef<Viewport>(IDENTITY)
@@ -180,19 +180,12 @@ export function MermaidViewerDialog({ source, onClose, onFallbackFocus }: Mermai
     return () => observer.disconnect()
   }, [isOpen])
 
-  // Mermaid emits width="100%" + an inline max-width and no height at all, so
-  // the injected <svg> has to be given its intrinsic pixel size before any
-  // transform math means anything.
+  // Sizing the <svg> is handled by the `--diagram-w`/`--diagram-h` custom
+  // properties on the stage (see the `.mermaid-viewer-stage svg` rule in
+  // index.css) rather than by mutating the element here -- an imperative write
+  // is discarded the next time React re-injects the svg.
   useLayoutEffect(() => {
     if (!svg || !contentSize) return
-    const svgEl = stageRef.current?.querySelector('svg')
-    if (!svgEl) return
-    svgEl.removeAttribute('width')
-    svgEl.removeAttribute('height')
-    svgEl.style.maxWidth = 'none'
-    svgEl.style.width = `${contentSize.width}px`
-    svgEl.style.height = `${contentSize.height}px`
-    svgEl.setAttribute('preserveAspectRatio', 'xMidYMid meet')
     // Keep the user's view across a theme re-render; only fit on a fresh open.
     if (!userAdjustedRef.current) fitToView()
   }, [svg, contentSize, fitToView])
@@ -357,9 +350,9 @@ export function MermaidViewerDialog({ source, onClose, onFallbackFocus }: Mermai
         aria-label="Expanded diagram viewer"
         aria-describedby="mermaid-viewer-hint"
         tabIndex={-1}
-        className="relative flex flex-col w-[94vw] h-[92vh] rounded-lg shadow-xl outline-none bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700"
+        className="relative flex flex-col w-[94vw] h-[92vh] rounded-lg shadow-xl outline-hidden bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700"
       >
-        <div className="flex-shrink-0 flex items-center justify-between gap-2 px-3 py-2 border-b border-gray-200 dark:border-gray-700">
+        <div className="shrink-0 flex items-center justify-between gap-2 px-3 py-2 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Diagram</h2>
           <div className="flex items-center gap-1">
             <ToolbarButton
@@ -400,7 +393,7 @@ export function MermaidViewerDialog({ source, onClose, onFallbackFocus }: Mermai
         >
           {status === 'error' ? (
             <div className="absolute inset-0 flex items-center justify-center p-6">
-              <div className="max-w-2xl text-sm text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded p-3 font-mono whitespace-pre-wrap">
+              <div className="max-w-2xl text-sm text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-sm p-3 font-mono whitespace-pre-wrap">
                 <strong>Diagram error</strong>
                 {'\n'}
                 {error}
@@ -416,9 +409,18 @@ export function MermaidViewerDialog({ source, onClose, onFallbackFocus }: Mermai
             </div>
           ) : (
             <div
-              ref={stageRef}
               className="mermaid-viewer-stage"
-              style={{ transform: toTransform(viewport) }}
+              // The diagram's intrinsic size rides along as custom properties
+              // that index.css applies to the svg. It has to travel through a
+              // React-owned prop: re-renders re-inject the svg and would throw
+              // away anything written onto the element imperatively.
+              style={{
+                transform: toTransform(viewport),
+                ...(contentSize && {
+                  '--diagram-w': `${contentSize.width}px`,
+                  '--diagram-h': `${contentSize.height}px`,
+                }),
+              } as CSSProperties}
               dangerouslySetInnerHTML={{ __html: svg }}
             />
           )}
@@ -426,7 +428,7 @@ export function MermaidViewerDialog({ source, onClose, onFallbackFocus }: Mermai
 
         <p
           id="mermaid-viewer-hint"
-          className="mermaid-viewer-hint flex-shrink-0 px-3 py-1.5 text-xs text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700"
+          className="mermaid-viewer-hint shrink-0 px-3 py-1.5 text-xs text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700"
         >
           Drag to pan · Scroll to zoom · Arrow keys pan · <kbd>+</kbd> / <kbd>−</kbd> zoom · <kbd>0</kbd> fit ·{' '}
           <kbd>Esc</kbd> close

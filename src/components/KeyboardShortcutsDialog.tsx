@@ -104,7 +104,7 @@ export function KeyboardShortcutsDialog({ isOpen, onClose }: KeyboardShortcutsDi
                 {group.shortcuts.map((shortcut) => (
                   <div key={shortcut.keys} className="flex items-center justify-between py-1">
                     <span className="text-sm text-gray-700 dark:text-gray-300">{shortcut.description}</span>
-                    <kbd className="px-2 py-0.5 text-xs font-mono bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-gray-600 dark:text-gray-300">
+                    <kbd className="px-2 py-0.5 text-xs font-mono bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-sm text-gray-600 dark:text-gray-300">
                       {shortcut.keys}
                     </kbd>
                   </div>

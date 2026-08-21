@@ -51,7 +51,7 @@ export function TableCreationDialog({ isOpen, onClose, onInsert }: TableCreation
             Click to select size: {hoverCell ? `${hoverCell.row} × ${hoverCell.col}` : `${rows} × ${cols}`}
           </p>
           <div
-            className="inline-grid gap-1 p-2 bg-gray-100 dark:bg-gray-700 rounded"
+            className="inline-grid gap-1 p-2 bg-gray-100 dark:bg-gray-700 rounded-sm"
             style={{ gridTemplateColumns: `repeat(8, 1fr)` }}
           >
             {Array.from({ length: 8 }, (_, rowIndex) =>
@@ -66,7 +66,7 @@ export function TableCreationDialog({ isOpen, onClose, onInsert }: TableCreation
                   <button
                     key={`${row}-${col}`}
                     type="button"
-                    className={`w-6 h-6 border rounded transition-colors ${
+                    className={`w-6 h-6 border rounded-sm transition-colors ${
                       isSelected
                         ? 'bg-blue-500 border-blue-600'
                         : 'bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 hover:border-blue-400'
@@ -93,7 +93,7 @@ export function TableCreationDialog({ isOpen, onClose, onInsert }: TableCreation
               max={20}
               value={rows}
               onChange={(e) => setRows(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
-              className="w-20 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-20 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             />
           </div>
           <div>
@@ -106,7 +106,7 @@ export function TableCreationDialog({ isOpen, onClose, onInsert }: TableCreation
               max={20}
               value={cols}
               onChange={(e) => setCols(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
-              className="w-20 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-20 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             />
           </div>
         </div>
@@ -117,7 +117,7 @@ export function TableCreationDialog({ isOpen, onClose, onInsert }: TableCreation
             type="checkbox"
             checked={withHeader}
             onChange={(e) => setWithHeader(e.target.checked)}
-            className="w-4 h-4 rounded border-gray-300 dark:border-gray-600"
+            className="w-4 h-4 rounded-sm border-gray-300 dark:border-gray-600"
           />
           <span className="text-sm text-gray-700 dark:text-gray-200">
             Include header row
@@ -129,14 +129,14 @@ export function TableCreationDialog({ isOpen, onClose, onInsert }: TableCreation
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+            className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={handleInsert}
-            className="px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 text-sm text-white bg-blue-600 rounded-sm hover:bg-blue-700 transition-colors"
           >
             Insert Table
           </button>

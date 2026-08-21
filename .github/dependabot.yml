@@ -63,6 +63,19 @@ updates:
         update-types:
           - minor
           - patch
+      # tailwindcss and @tailwindcss/vite are published from the same repo at
+      # the same version and are checked against each other at build time, so
+      # they have to move together -- the same lockstep hazard as the groups
+      # above. Tailwind is a devDependency, so it also has to be excluded from
+      # development-minor-patch below or that group would swallow it first and
+      # this group would never take effect.
+      tailwind:
+        patterns:
+          - "tailwindcss"
+          - "@tailwindcss/*"
+        update-types:
+          - minor
+          - patch
       # Everything else, bundled by risk level so routine upgrades arrive as a
       # couple of reviewable PRs rather than a dozen. Major versions are
       # deliberately excluded from these groups and so arrive individually,
@@ -87,6 +100,8 @@ updates:
           - "@types/react-dom"
           - "vite"
           - "@vitejs/plugin-react"
+          - "tailwindcss"
+          - "@tailwindcss/*"
     # A major bump for either of these, if merely left ungrouped by the
     # restriction above, would arrive as one individual PR PER PACKAGE --
     # 15 of them for Tiptap. Suppress majors outright instead; do that
@@ -148,14 +163,20 @@ updates:
       - dependency-name: "@vitejs/plugin-react"
         update-types:
           - "version-update:semver-major"
-      # Tailwind v4 replaced the JS-config + @tailwind-directive architecture
-      # with a CSS-first one (@import "tailwindcss" + @theme) -- this is a
-      # real migration (new PostCSS plugin package, tailwind.config.js
-      # rewritten as CSS, every utility class in the app re-checked), not a
-      # version bump. `npm ci` succeeds for this one; the *build* fails
-      # inside Tailwind's own PostCSS processing of the current config.
-      # Deferred deliberately; do it as dedicated work when it's worth doing.
+      # The v3 -> v4 migration this rule used to defer is done (see CHANGELOG
+      # 1.8.0). The ignore stays, now pointing forward: a Tailwind major is a
+      # config-architecture change, not a version bump. v4 moved the whole JS
+      # config into CSS and renamed a swathe of utilities, and crucially the
+      # damage from getting it wrong is invisible to CI -- `npm ci`, lint,
+      # tsc, the test suite and `vite build` all stayed green through the
+      # entire v4 migration while the UI was unverified. Two of the packages
+      # are also lockstep-coupled (see the "tailwind" group above), so a major
+      # left ungrouped would arrive as one PR per package. Do the next one as
+      # deliberate work with a real browser pass, not as a merged PR.
       - dependency-name: "tailwindcss"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "@tailwindcss/*"
         update-types:
           - "version-update:semver-major"
 

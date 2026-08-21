@@ -73,7 +73,7 @@ function MenuButton({ onClick, isActive, disabled, children, title }: MenuButton
       disabled={disabled}
       title={title}
       className={`
-        px-2 py-1 rounded text-sm font-medium transition-colors
+        px-2 py-1 rounded-sm text-sm font-medium transition-colors
         ${isActive
           ? 'bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800'
           : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600'

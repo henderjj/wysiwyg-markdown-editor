@@ -20,7 +20,7 @@ function ToolbarButton({ onClick, title, children, danger }: ToolbarButtonProps)
       type="button"
       onClick={onClick}
       title={title}
-      className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
+      className={`px-2 py-1 text-xs font-medium rounded-sm transition-colors ${
         danger
           ? 'text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30'
           : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600'
