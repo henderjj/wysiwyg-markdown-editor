@@ -1,6 +1,39 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+/* Tailwind v4 has no JS config, so v3's `darkMode: 'class'` lives here instead.
+   useTheme.ts puts an explicit `dark` or `light` class on <html>; without this
+   line every one of the ~318 `dark:` utilities silently falls back to
+   prefers-color-scheme and the theme menu stops working — a failure that still
+   builds, lints and tests clean. `:is()` rather than `:where()` is deliberate:
+   it contributes the specificity of `.dark`, which is what v3's generated
+   `.dark .dark\:foo` selector did, so dark still outranks light as before. */
+@custom-variant dark (&:is(.dark *));
+
+/* Preflight compat. v4 changed two defaults that this app relies on:
+   buttons became `cursor: default`, and the placeholder colour became the text
+   colour at 50% opacity. The cursor is the load-bearing one — there are 58
+   <button> elements and only 8 explicit `cursor-pointer` classes, so adopting
+   the v4 default would quietly drop the pointer cursor from the whole toolbar,
+   every menu and every dialog.
+
+   Note what is deliberately NOT restored here: v4's other Preflight change,
+   the default border colour moving from gray-200 to currentColor. Every
+   border-width utility in this codebase is paired with an explicit
+   border-<colour> class (checked exhaustively — the two that look bare,
+   SearchBar's `toggleClass` and TableCreationDialog's grid cell, take their
+   colour from the ternary they are concatenated with), so the compat shim the
+   upgrade tool generates for it was removed rather than kept. */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-gray-400);
+  }
+}
 
 /* Account for fixed footer when scrolling */
 html {
@@ -9,7 +42,7 @@ html {
 
 /* Editor styles */
 .ProseMirror {
-  @apply outline-none min-h-[500px] p-4 bg-white text-gray-900;
+  @apply outline-hidden min-h-[500px] p-4 bg-white text-gray-900;
   scroll-padding-bottom: 2rem;
 }
 
@@ -82,7 +115,7 @@ html {
 }
 
 .ProseMirror code {
-  @apply bg-gray-100 rounded px-1 py-0.5 font-mono text-pink-600;
+  @apply bg-gray-100 rounded-sm px-1 py-0.5 font-mono text-pink-600;
   font-size: 0.875em;
 }
 
@@ -112,7 +145,7 @@ html {
 
 .ProseMirror a:hover::after {
   content: attr(href);
-  @apply absolute left-0 top-full mt-1 px-2 py-1 text-xs font-normal no-underline rounded shadow-lg whitespace-nowrap z-50 bg-gray-800 text-gray-100;
+  @apply absolute left-0 top-full mt-1 px-2 py-1 text-xs font-normal no-underline rounded-sm shadow-lg whitespace-nowrap z-50 bg-gray-800 text-gray-100;
 }
 
 .ProseMirror hr {
@@ -120,7 +153,7 @@ html {
 }
 
 .ProseMirror img {
-  @apply max-w-full h-auto rounded;
+  @apply max-w-full h-auto rounded-sm;
 }
 
 /* Task list styles */
@@ -133,7 +166,7 @@ html {
 }
 
 .ProseMirror ul[data-type="taskList"] li > label {
-  @apply flex-shrink-0 select-none;
+  @apply shrink-0 select-none;
 }
 
 .ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"] {
@@ -467,11 +500,11 @@ html {
 
 /* Search & Replace highlights */
 .ProseMirror .search-match {
-  @apply bg-yellow-200 dark:bg-yellow-700/60 rounded-sm;
+  @apply bg-yellow-200 dark:bg-yellow-700/60 rounded-xs;
 }
 
 .ProseMirror .search-match-current {
-  @apply bg-orange-300 dark:bg-orange-600/80 rounded-sm ring-2 ring-orange-400 dark:ring-orange-500;
+  @apply bg-orange-300 dark:bg-orange-600/80 rounded-xs ring-2 ring-orange-400 dark:ring-orange-500;
 }
 
 /* Mermaid diagrams */
@@ -499,7 +532,7 @@ html {
 }
 
 .ProseMirror .mermaid-error {
-  @apply text-sm text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded p-3 font-mono whitespace-pre-wrap;
+  @apply text-sm text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-sm p-3 font-mono whitespace-pre-wrap;
 }
 
 /* Floating Expand / Edit / View controls */
@@ -516,7 +549,7 @@ html {
 }
 
 .ProseMirror .mermaid-toolbar button {
-  @apply px-2 py-1 text-xs font-medium rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer shadow-sm;
+  @apply px-2 py-1 text-xs font-medium rounded-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer shadow-xs;
 }
 
 /* Edit mode reuses the code-block <pre> styling; anchor the toolbar. */
@@ -540,13 +573,30 @@ html {
 }
 
 .mermaid-viewer-stage svg {
-  /* Overrides Mermaid's inline `max-width` for the frame before the layout
-     effect swaps in the intrinsic pixel size. */
+  /* Mermaid emits `width="100%"` plus an inline `max-width` and no height at
+     all, so the diagram has to be given its intrinsic pixel size or it falls
+     back to the browser's 300px default for a replaced element -- which the
+     zoom transform then scales, producing a small blurry diagram.
+
+     That size arrives as custom properties set on `.mermaid-viewer-stage`'s
+     React `style` prop, NOT by mutating this element in a layout effect. The
+     effect approach looked equivalent and silently wasn't: the dialog
+     re-renders and React re-injects the svg via dangerouslySetInnerHTML, which
+     replaces this node and discards any attributes an effect had written --
+     and because the effect's deps hadn't changed it never re-ran. React
+     re-applies the stage's `style` on every render, so the size cannot be lost
+     that way. Keep it here rather than moving it back into JS.
+
+     A stylesheet rule also outranks the `width="100%"` presentation attribute,
+     so that attribute needs no removing; the `!important` is required only to
+     beat Mermaid's *inline* max-width. */
   max-width: none !important;
   display: block;
+  width: var(--diagram-w, auto);
+  height: var(--diagram-h, auto);
 }
 
 .mermaid-viewer-view kbd,
 .mermaid-viewer-hint kbd {
-  @apply px-1 py-0.5 text-[0.65rem] font-mono bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded;
+  @apply px-1 py-0.5 text-[0.65rem] font-mono bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm;
 }

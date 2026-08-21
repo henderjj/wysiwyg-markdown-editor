@@ -1522,7 +1522,7 @@ if (action.startsWith('file.openRecent:')) {
       onDrop={handleDrop}
     >
       {/* Menu Bar */}
-      <header className="flex-shrink-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <header className="shrink-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <AppMenuBar
           menuState={{
             showPreview,
@@ -1542,14 +1542,14 @@ if (action.startsWith('file.openRecent:')) {
       </header>
 
       {/* Tabs */}
-      <div className="flex-shrink-0 z-30 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+      <div className="shrink-0 z-30 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
         <div className="px-4">
           <div className="flex items-center gap-1 overflow-x-auto py-1">
             {/* Toolbar buttons */}
-            <div className="flex items-center gap-0.5 pr-2 mr-1 border-r border-gray-300 dark:border-gray-500 flex-shrink-0">
+            <div className="flex items-center gap-0.5 pr-2 mr-1 border-r border-gray-300 dark:border-gray-500 shrink-0">
               <button
                 onClick={handleNewTab}
-                className="p-1 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
+                className="p-1 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-sm"
                 title="New (Ctrl+N)"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1561,7 +1561,7 @@ if (action.startsWith('file.openRecent:')) {
               </button>
               <button
                 onClick={handleOpen}
-                className="p-1 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
+                className="p-1 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-sm"
                 title="Open (Ctrl+O)"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1570,7 +1570,7 @@ if (action.startsWith('file.openRecent:')) {
               </button>
               <button
                 onClick={handleSave}
-                className="p-1 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
+                className="p-1 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-sm"
                 title="Save (Ctrl+S)"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1581,7 +1581,7 @@ if (action.startsWith('file.openRecent:')) {
               </button>
               <button
                 onClick={() => handleCloseTab(activeDocId)}
-                className="p-1 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
+                className="p-1 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-sm"
                 title="Close Tab (Ctrl+W)"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1591,7 +1591,7 @@ if (action.startsWith('file.openRecent:')) {
               </button>
               <button
                 onClick={handleCloseAllTabs}
-                className="p-1 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
+                className="p-1 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-sm"
                 title="Close All Tabs"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1604,7 +1604,7 @@ if (action.startsWith('file.openRecent:')) {
               <div className="w-px h-4 bg-gray-300 dark:bg-gray-500 mx-0.5" />
               <button
                 onClick={togglePreview}
-                className={`p-1 rounded ${showPreview ? 'text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40' : 'text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
+                className={`p-1 rounded-sm ${showPreview ? 'text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40' : 'text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
                 title="Markdown Preview (Ctrl+M)"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1614,7 +1614,7 @@ if (action.startsWith('file.openRecent:')) {
               </button>
               <button
                 onClick={toggleDocumentMap}
-                className={`p-1 rounded ${showDocumentMap ? 'text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40' : 'text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
+                className={`p-1 rounded-sm ${showDocumentMap ? 'text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40' : 'text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
                 title="Document Map (Ctrl+D)"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1632,7 +1632,7 @@ if (action.startsWith('file.openRecent:')) {
                     const fromIdx = documents.findIndex(d => d.id === draggingTabId)
                     // Don't show indicator right after the dragged tab (no-op position)
                     return fromIdx !== idx - 1 ? (
-                      <div className="w-0.5 h-6 bg-blue-500 rounded flex-shrink-0 -mx-0.5" />
+                      <div className="w-0.5 h-6 bg-blue-500 rounded-sm shrink-0 -mx-0.5" />
                     ) : null
                   })()
                 )}
@@ -1664,7 +1664,7 @@ if (action.startsWith('file.openRecent:')) {
                       onBlur={handleFinishRename}
                       onKeyDown={handleRenameKeyDown}
                       onClick={(e) => e.stopPropagation()}
-                      className="max-w-[150px] px-1 py-0.5 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-blue-500 rounded outline-none"
+                      className="max-w-[150px] px-1 py-0.5 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-blue-500 rounded-sm outline-hidden"
                       autoFocus
                     />
                   ) : (
@@ -1680,9 +1680,9 @@ if (action.startsWith('file.openRecent:')) {
                     </span>
                   )}
                   {fileDeletedDocs.has(doc.id) ? (
-                    <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" title="File deleted from disk" />
+                    <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" title="File deleted from disk" />
                   ) : fileChangedDocs.has(doc.id) ? (
-                    <span className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" title="File changed on disk" />
+                    <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" title="File changed on disk" />
                   ) : null}
                   <button
                     onClick={(e) => {
@@ -1699,7 +1699,7 @@ if (action.startsWith('file.openRecent:')) {
                   (() => {
                     const fromIdx = documents.findIndex(d => d.id === draggingTabId)
                     return fromIdx !== documents.length - 1 ? (
-                      <div className="w-0.5 h-6 bg-blue-500 rounded flex-shrink-0 -mx-0.5" />
+                      <div className="w-0.5 h-6 bg-blue-500 rounded-sm shrink-0 -mx-0.5" />
                     ) : null
                   })()
                 )}
@@ -1717,7 +1717,7 @@ if (action.startsWith('file.openRecent:')) {
               const dragDoc = documents.find(d => d.id === draggingTabId)
               return dragDoc ? (
                 <div
-                  className="fixed z-50 flex items-center gap-1 px-3 py-1 rounded text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-blue-400 shadow-lg pointer-events-none select-none"
+                  className="fixed z-50 flex items-center gap-1 px-3 py-1 rounded-sm text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-blue-400 shadow-lg pointer-events-none select-none"
                   style={{ left: dragPos.x + 12, top: dragPos.y - 12 }}
                 >
                   <span className="max-w-[150px] truncate">
@@ -1749,7 +1749,7 @@ if (action.startsWith('file.openRecent:')) {
 
       {/* Drag overlay */}
       {isDragOver && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-blue-500/20 backdrop-blur-sm pointer-events-none">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-blue-500/20 backdrop-blur-xs pointer-events-none">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl px-12 py-8 border-2 border-dashed border-blue-500">
             <p className="text-xl font-semibold text-blue-600 dark:text-blue-400">Drop .md file to open</p>
           </div>
@@ -1758,7 +1758,7 @@ if (action.startsWith('file.openRecent:')) {
 
       {/* Notification */}
       {notification && (
-        <div className="fixed top-16 right-4 bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800 px-4 py-2 rounded shadow-lg z-50">
+        <div className="fixed top-16 right-4 bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800 px-4 py-2 rounded-sm shadow-lg z-50">
           {notification}
         </div>
       )}
@@ -1784,12 +1784,12 @@ if (action.startsWith('file.openRecent:')) {
           <div className={`flex-1 min-h-0 px-4 py-2 flex flex-col ${showPreview ? 'max-w-[95%]' : 'max-w-7xl'} mx-auto w-full`}>
           {/* File deleted from disk — inline warning bar */}
           {fileDeletedDocs.has(activeDocId) && (
-            <div className="flex-shrink-0 flex items-center gap-3 px-3 py-1.5 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-md text-sm text-amber-700 dark:text-amber-300 mb-2">
-              <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
+            <div className="shrink-0 flex items-center gap-3 px-3 py-1.5 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-md text-sm text-amber-700 dark:text-amber-300 mb-2">
+              <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
               <span className="flex-1">{activeDoc?.filename || 'File'} has been deleted from disk</span>
               <button
                 onClick={handleSaveAs}
-                className="px-2 py-0.5 bg-amber-600 text-white rounded text-xs font-medium hover:bg-amber-700 transition-colors"
+                className="px-2 py-0.5 bg-amber-600 text-white rounded-sm text-xs font-medium hover:bg-amber-700 transition-colors"
               >
                 Save As
               </button>
@@ -1804,12 +1804,12 @@ if (action.startsWith('file.openRecent:')) {
           )}
           {/* File changed on disk — inline info bar */}
           {fileChangedDocs.has(activeDocId) && (
-            <div className="flex-shrink-0 flex items-center gap-3 px-3 py-1.5 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md text-sm text-blue-700 dark:text-blue-300 mb-2">
-              <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
+            <div className="shrink-0 flex items-center gap-3 px-3 py-1.5 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md text-sm text-blue-700 dark:text-blue-300 mb-2">
+              <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
               <span className="flex-1">{activeDoc?.filename || 'File'} has been modified externally</span>
               <button
                 onClick={() => handleReloadFromDisk(activeDocId)}
-                className="px-2 py-0.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 transition-colors"
+                className="px-2 py-0.5 bg-blue-600 text-white rounded-sm text-xs font-medium hover:bg-blue-700 transition-colors"
               >
                 Reload
               </button>
@@ -1845,12 +1845,12 @@ if (action.startsWith('file.openRecent:')) {
 
             {/* Markdown Preview */}
             {showPreview && (
-              <div className="min-h-0 flex flex-col border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800 shadow-sm">
-                <div className="flex-shrink-0 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 px-4 py-[11px] flex items-center justify-between">
+              <div className="min-h-0 flex flex-col border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800 shadow-xs">
+                <div className="shrink-0 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 px-4 py-[11px] flex items-center justify-between">
                   <h2 className="text-sm font-medium text-gray-900 dark:text-gray-100">Markdown Output</h2>
                   <button
                     onClick={() => { setShowPreview(false); localStorage.setItem(SHOW_PREVIEW_KEY, 'false') }}
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 rounded px-1"
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-sm px-1"
                     title="Close preview"
                   >
                     ×
@@ -1868,7 +1868,7 @@ if (action.startsWith('file.openRecent:')) {
       </div>
 
       {/* Status bar */}
-      <footer className="flex-shrink-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 h-7 flex items-center z-10">
+      <footer className="shrink-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 h-7 flex items-center z-10">
         <div className="px-4 w-full flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
           <div className="flex items-center gap-3">
             <span>{statusInfo.words} {statusInfo.words === 1 ? 'word' : 'words'}</span>
@@ -1941,7 +1941,7 @@ if (action.startsWith('file.openRecent:')) {
             <div className="flex justify-end">
               <button
                 onClick={() => setShowAboutDialog(false)}
-                className="px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 text-sm text-white bg-blue-600 rounded-sm hover:bg-blue-700 transition-colors"
               >
                 OK
               </button>

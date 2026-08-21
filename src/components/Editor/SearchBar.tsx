@@ -73,7 +73,7 @@ export function SearchBar({ editor, onClose, initialShowReplace = false }: Searc
     }
   }, [editor, handleClose])
 
-  const toggleClass = 'px-1.5 py-0.5 text-xs rounded border transition-colors'
+  const toggleClass = 'px-1.5 py-0.5 text-xs rounded-sm border transition-colors'
   const toggleActiveClass = 'bg-blue-100 dark:bg-blue-900 border-blue-400 text-blue-700 dark:text-blue-300'
   const toggleInactiveClass = 'bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-500'
 
@@ -104,7 +104,7 @@ export function SearchBar({ editor, onClose, initialShowReplace = false }: Searc
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Search..."
-              className="flex-1 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 min-w-0"
+              className="flex-1 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 min-w-0"
             />
 
             {/* Toggle buttons */}
@@ -139,7 +139,7 @@ export function SearchBar({ editor, onClose, initialShowReplace = false }: Searc
             <button
               onClick={() => editor.commands.goToPrevMatch()}
               disabled={matchCount === 0}
-              className="px-1.5 py-0.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 rounded disabled:opacity-30"
+              className="px-1.5 py-0.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-sm disabled:opacity-30"
               title="Previous (Shift+Enter)"
             >
               &uarr;
@@ -147,7 +147,7 @@ export function SearchBar({ editor, onClose, initialShowReplace = false }: Searc
             <button
               onClick={() => editor.commands.goToNextMatch()}
               disabled={matchCount === 0}
-              className="px-1.5 py-0.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 rounded disabled:opacity-30"
+              className="px-1.5 py-0.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-sm disabled:opacity-30"
               title="Next (Enter)"
             >
               &darr;
@@ -156,7 +156,7 @@ export function SearchBar({ editor, onClose, initialShowReplace = false }: Searc
             {/* Close */}
             <button
               onClick={handleClose}
-              className="px-1.5 py-0.5 text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
+              className="px-1.5 py-0.5 text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-sm"
               title="Close (Esc)"
             >
               ×
@@ -172,19 +172,19 @@ export function SearchBar({ editor, onClose, initialShowReplace = false }: Searc
                 onChange={(e) => setReplaceTerm(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Replace..."
-                className="flex-1 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 min-w-0"
+                className="flex-1 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 min-w-0"
               />
               <button
                 onClick={() => editor.commands.replaceCurrent()}
                 disabled={matchCount === 0}
-                className="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:opacity-30"
+                className="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:opacity-30"
               >
                 Replace
               </button>
               <button
                 onClick={() => editor.commands.replaceAll()}
                 disabled={matchCount === 0}
-                className="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:opacity-30"
+                className="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:opacity-30"
               >
                 Replace All
               </button>

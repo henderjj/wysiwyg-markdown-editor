@@ -75,7 +75,7 @@ export function ImageDialog({ isOpen, onClose, onSubmit, initialSrc = '', initia
             onKeyDown={handleKeyDown}
             placeholder="https://example.com/image.png"
             autoFocus
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
           />
         </div>
 
@@ -90,7 +90,7 @@ export function ImageDialog({ isOpen, onClose, onSubmit, initialSrc = '', initia
             onChange={(e) => setAlt(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Describe the image"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
           />
         </div>
 
@@ -104,7 +104,7 @@ export function ImageDialog({ isOpen, onClose, onSubmit, initialSrc = '', initia
               </p>
             )}
           </div>
-          <div className="h-40 rounded border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 flex items-center justify-center overflow-hidden">
+          <div className="h-40 rounded-sm border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 flex items-center justify-center overflow-hidden">
             {previewStatus === 'empty' && (
               <span className="text-sm text-gray-400 dark:text-gray-500">No image URL</span>
             )}
@@ -142,7 +142,7 @@ export function ImageDialog({ isOpen, onClose, onSubmit, initialSrc = '', initia
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+            className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
           >
             Cancel
           </button>
@@ -150,7 +150,7 @@ export function ImageDialog({ isOpen, onClose, onSubmit, initialSrc = '', initia
             type="button"
             onClick={handleSubmit}
             disabled={!src.trim()}
-            className="px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm text-white bg-blue-600 rounded-sm hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {mode === 'insert' ? 'Insert Image' : 'Update Image'}
           </button>

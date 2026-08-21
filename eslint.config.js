@@ -32,7 +32,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['*.config.js', 'postcss.config.js', 'tailwind.config.js'],
+    files: ['*.config.js'],
     languageOptions: {
       globals: globals.node,
     },

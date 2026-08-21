@@ -134,7 +134,7 @@ export function DocumentMap({ editor, onClose, activeDocId }: DocumentMapProps) 
   }, [width])
 
   return (
-    <div className="flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-y-auto relative" style={{ width }}>
+    <div className="shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-y-auto relative" style={{ width }}>
       <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-600">
         <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
           Document Map

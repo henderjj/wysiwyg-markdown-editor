@@ -384,7 +384,7 @@ function createExtensions(markdownShortcuts: boolean, onExpandDiagram?: (source:
           placeholder.style.display = 'none'
 
           const buildPlaceholder = (alt: string) => {
-            placeholder.className = 'inline-flex items-center gap-1.5 px-3 py-2 rounded border border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 text-sm cursor-default'
+            placeholder.className = 'inline-flex items-center gap-1.5 px-3 py-2 rounded-sm border border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 text-sm cursor-default'
             placeholder.innerHTML = ''
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
             svg.setAttribute('width', '20')
@@ -547,7 +547,10 @@ export function Editor({ content = '', onUpdate, onEditorReady, markdownShortcut
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm sm:prose lg:prose-lg max-w-none focus:outline-none',
+        // No `prose*` classes here: @tailwindcss/typography was never installed,
+        // so they generated nothing in v3 either. Editor typography is hand-rolled
+        // in the `.ProseMirror` rules in index.css.
+        class: 'max-w-none focus:outline-hidden',
       },
       // Ensure cursor stays visible when typing near edges
       scrollThreshold: 100,
@@ -585,8 +588,8 @@ export function Editor({ content = '', onUpdate, onEditorReady, markdownShortcut
   }, [editor, expandedDiagram])
 
   return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 shadow-sm flex flex-col min-h-0 h-full overflow-hidden">
-      <div className="flex-shrink-0 z-20 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 rounded-t-lg">
+    <div className="border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 shadow-xs flex flex-col min-h-0 h-full overflow-hidden">
+      <div className="shrink-0 z-20 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 rounded-t-lg">
         <MenuBar editor={editor} showSearchBar={showSearchBar} onToggleFind={onToggleFind} />
         {showSearchBar && editor && onCloseSearchBar && (
           <SearchBar editor={editor} onClose={onCloseSearchBar} initialShowReplace={initialShowReplace} />

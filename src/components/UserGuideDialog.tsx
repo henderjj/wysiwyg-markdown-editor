@@ -7,7 +7,7 @@ interface UserGuideDialogProps {
 
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
-    <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-gray-600 dark:text-gray-300">
+    <kbd className="px-1.5 py-0.5 text-xs font-mono bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-sm text-gray-600 dark:text-gray-300">
       {children}
     </kbd>
   )
@@ -59,7 +59,7 @@ export function UserGuideDialog({ isOpen, onClose }: UserGuideDialogProps) {
             <p>
               When you open the app, you'll see a blank document ready for editing. Just start typing.
               Your work is automatically saved in your browser's local storage. To save as
-              a <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">.md</code> file,
+              a <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded-sm">.md</code> file,
               use <strong>File &gt; Save</strong> or press <Kbd>Ctrl+S</Kbd>.
             </p>
           </Section>
@@ -81,7 +81,7 @@ export function UserGuideDialog({ isOpen, onClose }: UserGuideDialogProps) {
               <li><strong>Open</strong> — <Kbd>Ctrl+O</Kbd> opens a markdown file from your computer. You can also drag and drop files onto the editor.</li>
               <li><strong>Save</strong> — <Kbd>Ctrl+S</Kbd> saves to the current file. For new documents, this prompts you for a location.</li>
               <li><strong>Save As</strong> — <Kbd>Ctrl+Shift+S</Kbd> lets you choose a new filename or location.</li>
-              <li><strong>Export as HTML</strong> — <strong>File &gt; Export as HTML</strong> saves the document as a standalone <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">.html</code> file with styling.</li>
+              <li><strong>Export as HTML</strong> — <strong>File &gt; Export as HTML</strong> saves the document as a standalone <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded-sm">.html</code> file with styling.</li>
               <li><strong>Reload from Disk</strong> — <Kbd>F5</Kbd> reloads the file, discarding unsaved changes.</li>
               <li><strong>Auto-save to File</strong> — Enable in <strong>Options</strong> menu to save automatically whenever you edit.</li>
               <li><strong>Close Tab</strong> — <Kbd>Ctrl+W</Kbd> closes the current tab (prompts to save if needed).</li>
@@ -95,7 +95,7 @@ export function UserGuideDialog({ isOpen, onClose }: UserGuideDialogProps) {
               <span><strong>Bold</strong></span><span>toolbar <strong>B</strong></span><span><Kbd>Ctrl+B</Kbd></span>
               <span><em>Italic</em></span><span>toolbar <em>I</em></span><span><Kbd>Ctrl+I</Kbd></span>
               <span><s>Strikethrough</s></span><span>toolbar <s>S</s></span><span><Kbd>Ctrl+Shift+X</Kbd></span>
-              <span>Inline code</span><span>toolbar <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">&lt;/&gt;</code></span><span><Kbd>Ctrl+E</Kbd></span>
+              <span>Inline code</span><span>toolbar <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded-sm">&lt;/&gt;</code></span><span><Kbd>Ctrl+E</Kbd></span>
               <span>Underline</span><span>—</span><span><Kbd>Ctrl+U</Kbd></span>
               <span>Blockquote</span><span>toolbar <strong>"</strong></span><span><Kbd>Ctrl+Shift+B</Kbd></span>
             </div>
@@ -195,7 +195,7 @@ export function UserGuideDialog({ isOpen, onClose }: UserGuideDialogProps) {
               <li><strong>Copy as HTML</strong> — <strong>Edit &gt; Copy as HTML</strong> copies
                 the raw HTML source to the clipboard.</li>
               <li><strong>Export as HTML</strong> — <strong>File &gt; Export as HTML</strong> saves
-                the document as a styled <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">.html</code> file.</li>
+                the document as a styled <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded-sm">.html</code> file.</li>
             </ul>
             <p>
               Both "Copy as Markdown" and "Copy as HTML" are also available in the right-click context menu
@@ -255,12 +255,12 @@ export function UserGuideDialog({ isOpen, onClose }: UserGuideDialogProps) {
               syntax auto-converts to formatted text:
             </p>
             <ul className="list-disc list-inside space-y-1 ml-2">
-              <li><code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded"># </code> at the start of a line for Heading 1, <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">## </code> for Heading 2, etc.</li>
-              <li><code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">- </code> or <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">* </code> for a bullet list</li>
-              <li><code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">1. </code> for a numbered list</li>
-              <li><code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">&gt; </code> for a blockquote</li>
-              <li><code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">```</code> for a code block</li>
-              <li>Wrap text with <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">**</code> for bold, <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">*</code> for italic</li>
+              <li><code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded-sm"># </code> at the start of a line for Heading 1, <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded-sm">## </code> for Heading 2, etc.</li>
+              <li><code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded-sm">- </code> or <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded-sm">* </code> for a bullet list</li>
+              <li><code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded-sm">1. </code> for a numbered list</li>
+              <li><code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded-sm">&gt; </code> for a blockquote</li>
+              <li><code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded-sm">```</code> for a code block</li>
+              <li>Wrap text with <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded-sm">**</code> for bold, <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded-sm">*</code> for italic</li>
             </ul>
             <p>Disable this from the Edit menu if you prefer toolbar-only formatting.</p>
           </Section>
@@ -270,7 +270,7 @@ export function UserGuideDialog({ isOpen, onClose }: UserGuideDialogProps) {
             <ul className="list-disc list-inside space-y-1 ml-2">
               <li><strong>Native file dialogs</strong> — Uses your OS file picker.</li>
               <li><strong>Open Recent</strong> — Remembers recently opened files.</li>
-              <li><strong>Open with</strong> — Associate <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">.md</code> files with the app.</li>
+              <li><strong>Open with</strong> — Associate <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded-sm">.md</code> files with the app.</li>
             </ul>
             <p>The web version uses the browser's File System Access API or standard file upload/download.</p>
           </Section>

@@ -142,9 +142,9 @@ git push origin v1.5.2
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | React 18, TypeScript, Vite |
+| Framework | React 19, TypeScript, Vite |
 | Editor | TipTap (ProseMirror) |
-| Styling | Tailwind CSS |
+| Styling | Tailwind CSS v4 (CSS-first config) |
 | Markdown export | Turndown (HTML → Markdown) |
 | Markdown import | Custom GFM parser (Markdown → HTML) |
 | Syntax highlighting | highlight.js via lowlight |

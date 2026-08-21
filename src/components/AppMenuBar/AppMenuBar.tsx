@@ -84,7 +84,7 @@ export function AppMenuBar({ menuState, onAction, focusEditor }: AppMenuBarProps
     return () => {
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('keyup', onKeyUp)
-      window.removeEventListener('blur', onBlur)
+      window.removeEventListener('blur-sm', onBlur)
     }
   }, [])
 
@@ -166,7 +166,7 @@ export function AppMenuBar({ menuState, onAction, focusEditor }: AppMenuBarProps
       <div className="ml-auto pr-2">
         <button
           onClick={cycleTheme}
-          className="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+          className="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-sm transition-colors"
           title={`Theme: ${menuState.theme} (click to cycle)`}
         >
           {isDark ? (

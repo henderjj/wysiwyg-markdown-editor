@@ -289,7 +289,7 @@ export function DropdownMenu({ items, onAction, onClose, onNavigateLeft, onNavig
     <div
       ref={menuRef}
       tabIndex={-1}
-      className={`${positionClass} bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg min-w-[220px] py-1 z-50 outline-none`}
+      className={`${positionClass} bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg min-w-[220px] py-1 z-50 outline-hidden`}
       onKeyDown={handleKeyDown}
     >
       {items.map((item, i) => (
