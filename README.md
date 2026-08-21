@@ -42,7 +42,7 @@ Users interact with a familiar rich-text interface while the application maintai
 - **Reload from disk** (F5) — re-read the file, discarding unsaved changes
 - **External change detection** — watches open files for changes by other apps, with per-tab indicators and a reload prompt
 - **Deleted file detection** — warns when an open file is deleted from disk, with Save As option; detects file recreation
-- **Print** (Ctrl+P) — print the current document
+- **Print** (Ctrl+P) — print the full document as a clean, always-light page with rendered Mermaid diagrams and sensible page breaks (no app chrome)
 - **Auto-save** — documents persist to browser localStorage (1s debounce)
 - **Auto-save to file** — optional setting to write changes directly to disk (4s debounce)
 - **Line ending preservation** — detects CRLF/LF on open and preserves on save

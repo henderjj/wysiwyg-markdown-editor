@@ -85,7 +85,7 @@ export function UserGuideDialog({ isOpen, onClose }: UserGuideDialogProps) {
               <li><strong>Reload from Disk</strong> — <Kbd>F5</Kbd> reloads the file, discarding unsaved changes.</li>
               <li><strong>Auto-save to File</strong> — Enable in <strong>Options</strong> menu to save automatically whenever you edit.</li>
               <li><strong>Close Tab</strong> — <Kbd>Ctrl+W</Kbd> closes the current tab (prompts to save if needed).</li>
-              <li><strong>Print</strong> — <Kbd>Ctrl+P</Kbd> prints the current document.</li>
+              <li><strong>Print</strong> — <Kbd>Ctrl+P</Kbd> prints the whole document across as many pages as it needs, styled like the HTML export and always light, with no app chrome.</li>
             </ul>
           </Section>
 

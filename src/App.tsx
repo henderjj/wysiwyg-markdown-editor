@@ -25,6 +25,7 @@ import {
   setDocumentLineEnding,
   watchFileHandle,
 } from './lib/markdown'
+import { buildPrintDocument, inlineMermaidDiagrams, printHtmlDocument } from './lib/print'
 import { markdownToHtml } from './lib/markdownParser'
 import { pasteAsMarkdown } from './lib/pasteAsMarkdown'
 import { readClipboardText, writeClipboardText } from './lib/clipboard'
@@ -568,6 +569,19 @@ function App() {
     }
   }, [showNotification])
 
+  // Shared by File > Print and Ctrl+P. Prints a standalone document rather than
+  // the app DOM -- see the comment at the top of lib/print.ts.
+  const handlePrint = useCallback(async () => {
+    if (!editorRef.current) return
+    const baseName = (activeDocRef.current?.filename || 'document.md').replace(/\.md$/, '')
+    try {
+      const bodyHtml = await inlineMermaidDiagrams(editorRef.current.getHTML())
+      await printHtmlDocument(buildPrintDocument(bodyHtml, baseName))
+    } catch {
+      showNotification('Could not print this document')
+    }
+  }, [showNotification])
+
   const handleNewTab = useCallback(() => {
     const newDoc: Document = {
       id: generateId(),
@@ -1074,7 +1088,7 @@ function App() {
       case 'file.saveAs': handleSaveAs(); break
       case 'file.reload': handleReloadFromDisk(activeDocIdRef.current); break
       case 'file.exportHtml': handleExportHtml(); break
-      case 'file.print': window.print(); break
+      case 'file.print': handlePrint(); break
       case 'file.closeTab': handleCloseTab(activeDocId); break
       case 'file.closeOtherTabs': handleCloseOtherTabs(activeDocId); break
       case 'file.closeAll': handleCloseAllTabs(); break
@@ -1151,7 +1165,7 @@ if (action.startsWith('file.openRecent:')) {
         }
         break
     }
-  }, [activeDocId, handleNewTab, handleOpen, handleSave, handleSaveAs, handleCloseTab, handleCloseOtherTabs, handleCloseAllTabs, handleCopy, togglePreview, toggleDocumentMap, toggleMarkdownShortcuts, setTheme, showNotification, openFileFromContent, zoomIn, zoomOut])
+  }, [activeDocId, handleNewTab, handleOpen, handleSave, handleSaveAs, handleCloseTab, handleCloseOtherTabs, handleCloseAllTabs, handleCopy, handlePrint, togglePreview, toggleDocumentMap, toggleMarkdownShortcuts, setTheme, showNotification, openFileFromContent, zoomIn, zoomOut])
 
   const handleStartRename = useCallback((docId: string, currentFilename: string) => {
     setEditingTabId(docId)
@@ -1243,7 +1257,7 @@ if (action.startsWith('file.openRecent:')) {
           break
         case 'p':
           e.preventDefault()
-          window.print()
+          handlePrint()
           break
         case 'm':
           e.preventDefault()
@@ -1293,7 +1307,7 @@ if (action.startsWith('file.openRecent:')) {
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [handleNewTab, handleOpen, handleSave, handleSaveAs, handleCloseTab, cycleTab, zoomIn, zoomOut, togglePreview, toggleDocumentMap, handleReloadFromDisk, handleCopyPlainText])
+  }, [handleNewTab, handleOpen, handleSave, handleSaveAs, handleCloseTab, cycleTab, zoomIn, zoomOut, togglePreview, toggleDocumentMap, handleReloadFromDisk, handleCopyPlainText, handlePrint])
 
   // Escape from toolbar / status bar / tabs → focus editor
   useEffect(() => {

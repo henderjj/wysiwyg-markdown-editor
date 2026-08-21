@@ -1,7 +1,7 @@
 {
   "name": "wysiwyg-markdown",
   "private": true,
-  "version": "1.8.0",
+  "version": "1.8.1",
   "type": "module",
   "description": "A WYSIWYG editor that produces GitHub Flavored Markdown",
   "license": "MIT",
