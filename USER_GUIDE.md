@@ -69,6 +69,10 @@ If a file is deleted from disk while it's open in the editor, an amber dot appea
 
 Press `Ctrl+P` or use **File > Print** to print the current document.
 
+Printing produces a clean document rather than a picture of the editor: the menu bar, toolbar, tab bar and status bar are all left out, and the whole document prints across as many pages as it needs. The output is styled the same way as **Export as HTML**, and is always light even when the app is in dark mode. Mermaid diagrams print as rendered diagrams rather than as their source, and the document name is used for the print header and as the default filename when you print to PDF.
+
+Page breaks avoid splitting code blocks, tables, block quotes and images wherever possible, and a table that runs over a page boundary repeats its header row. Note that local and relative image paths are not resolved, so an image that looks broken in the editor will also be blank in print; images with `http(s)://` addresses print normally.
+
 ---
 
 ## Formatting Text

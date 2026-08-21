@@ -391,6 +391,19 @@ export function wrapHtmlDocument(bodyHtml: string, title: string = 'Document'): 
   ul[data-type="taskList"] { list-style: none; padding-left: 0; }
   ul[data-type="taskList"] li { display: flex; align-items: flex-start; gap: 0.5rem; }
   ul[data-type="taskList"] li input[type="checkbox"] { margin-top: 0.3em; }
+  /* Mermaid diagrams inlined as SVG by src/lib/print.ts */
+  .mermaid-print { margin: 1rem 0; text-align: center; }
+  .mermaid-print svg { max-width: 100%; height: auto; }
+  @page { margin: 18mm 16mm; }
+  @media print {
+    /* The 800px screen column would letterbox the paper. */
+    body { max-width: none; margin: 0; padding: 0; }
+    a { color: inherit; text-decoration: underline; }
+    pre, blockquote, table, tr, img, .mermaid-print { break-inside: avoid; }
+    h1, h2, h3, h4, h5, h6 { break-after: avoid; }
+    /* Repeat the header row when a table spans pages. */
+    thead { display: table-header-group; }
+  }
 </style>
 </head>
 <body>

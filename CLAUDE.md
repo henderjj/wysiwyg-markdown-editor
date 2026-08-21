@@ -106,6 +106,16 @@ Helper utilities in `markdown.ts`:
 
 The Edit menu has "Copy as Markdown" (selection-aware, falls back to full doc), "Copy as HTML", and "Copy as Plain Text" (Ctrl+Shift+C, strips all formatting). The File menu has "Export as HTML..." which produces a styled `.html` file. All copy options also appear in the right-click context menu when text is selected.
 
+### Printing
+
+**Printing never renders the live app DOM.** `src/lib/print.ts` builds a standalone document from `editor.getHTML()` and prints it in a hidden iframe; `handlePrint` in `App.tsx` is shared by `file.print` and Ctrl+P (both were previously a bare `window.print()`, which is what produced the one-page-screenshot bug fixed in v1.8.1). The app shell cannot be printed directly: it is a fixed-height flex tree (`h-screen` + `overflow-hidden` at three levels) wrapping the editor's `overflow-y-auto` scroll viewport, so the printer only ever sees the first viewport-height slice. Overriding that in `@media print` was rejected as too fragile — there is no visual-regression tooling here, so a broken override would be invisible to CI.
+
+The print stylesheet is the one already inside `wrapHtmlDocument()` (`markdown.ts`), so print output and "Export as HTML" cannot drift apart. That is also why the `@page`/`break-inside`/`table-header-group` rules live there rather than in `index.css` — `index.css` is not loaded in the iframe. The `@media print` block that remains in `index.css` is only a fallback for the window being printed by some *other* route (a native browser menu); it hides the shell and shows a "use File > Print" line instead of emitting a clipped screenshot.
+
+**The iframe steals keyboard focus.** `frameWindow.focus()` is needed so the print targets the iframe rather than the parent, but nothing gives focus back — without restoring it the editor goes deaf after a single print, and typing plus every shortcut (Ctrl+P included) lands in the hidden frame. `printHtmlDocument()` captures `document.activeElement` up front and restores it after `print()` returns *and* on iframe removal. Caught only by driving two consecutive prints in a real browser; the build, tests and lint all stayed green. Do not remove either restore call.
+
+**Mermaid prints as rendered SVG, not source.** `Mermaid.ts`'s `renderHTML` emits `<pre><code class="language-mermaid">`, so `getHTML()` yields diagram *source*; `inlineMermaidDiagrams()` re-renders each block and substitutes the SVG. It forces `theme: 'default'` because `MermaidNodeView` renders at the *app* theme, and a diagram authored in dark mode would otherwise print dark-on-white. It must keep using `nextMermaidRenderId()` for the id-collision reason documented in `mermaidLoader.ts`. A failed render leaves the original `<pre>` so the source still prints. Note "Export as HTML" does *not* do this substitution — exported files still contain the source fence.
+
 ### Keyboard Accessibility
 
 The editor must remain usable without a mouse and must not trap keyboard focus (WCAG 2.1.2). Tab key behavior is context-dependent and handled by two custom extensions in `Editor.tsx`:
