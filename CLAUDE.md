@@ -116,6 +116,8 @@ The print stylesheet is the one already inside `wrapHtmlDocument()` (`markdown.t
 
 **Mermaid prints as rendered SVG, not source.** `Mermaid.ts`'s `renderHTML` emits `<pre><code class="language-mermaid">`, so `getHTML()` yields diagram *source*; `inlineMermaidDiagrams()` re-renders each block and substitutes the SVG. It forces `theme: 'default'` because `MermaidNodeView` renders at the *app* theme, and a diagram authored in dark mode would otherwise print dark-on-white. It must keep using `nextMermaidRenderId()` for the id-collision reason documented in `mermaidLoader.ts`. A failed render leaves the original `<pre>` so the source still prints. Note "Export as HTML" does *not* do this substitution — exported files still contain the source fence.
 
+**No Tauri permission is involved.** This is the webview's own `window.print()`, not Tauri's `core:webview:allow-print` (which is absent from `src-tauri/capabilities/default.json` and not needed). Iframe printing was confirmed working in the Tauri WebView2 build on Windows despite `additionalBrowserArgs: "--disable-features=msWebOOUI,msPdfOOUI,..."` in `tauri.conf.json` — that flag was the main suspected risk when this was built, and it turned out not to interfere, so don't go changing it on print's account. A native print dialog can't be automated, so any future change to `print.ts` needs a manual `npm run tauri:dev` + Ctrl+P as well as a browser check.
+
 ### Keyboard Accessibility
 
 The editor must remain usable without a mouse and must not trap keyboard focus (WCAG 2.1.2). Tab key behavior is context-dependent and handled by two custom extensions in `Editor.tsx`:
