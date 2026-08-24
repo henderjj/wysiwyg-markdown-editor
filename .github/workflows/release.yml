@@ -12,6 +12,19 @@ name: Release
 # is deliberate: an automatic publish would hand users unsigned binaries the
 # moment a tag was pushed, with no chance to check them first.
 #
+# Do NOT create the release yourself in the GitHub UI — publish the draft this
+# workflow produces. tauri-action is configured with releaseDraft: true, and its
+# create-release step skips a release for the tag that is not a draft ("Found
+# release with tag ... but it's NOT a draft!"), then creates a second release
+# for the same tag rather than uploading into the one you made. Your release
+# stays empty. That is how v1.8.1 came to be published with no binaries.
+#
+# To recover from that: turn the release back into a draft
+# (gh release edit <tag> --draft), re-run the original tagged run from the
+# Actions UI — which preserves github.ref_name, so tauri-action finds the draft
+# and uploads into it — then publish the release again. The release keeps its
+# id, URL and notes.
+#
 # Note: the tag must match the version in tauri.conf.json, package.json and
 # Cargo.toml. Nothing enforces that automatically.
 
@@ -120,6 +133,10 @@ jobs:
   # no template to control them, so the names are normalised here instead.
   # Renaming after upload (PATCH on the asset) avoids re-uploading anything.
   #
+  # An asset has both a `name` and a `label`, and the release *page* shows the
+  # label whenever one is set, so both have to be dealt with — see the comment
+  # on the PATCH below.
+  #
   # Runs once, after every platform has finished, so it sees the complete set.
   rename-assets:
     name: Normalise asset names
@@ -141,19 +158,38 @@ jobs:
 
           # A draft release is NOT reachable via /releases/tags/{tag} — that
           # endpoint 404s for drafts — so find it by listing releases instead.
-          RELEASE_ID=$(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate \
-            --jq "[.[] | select(.tag_name == \"$TAG\")] | first | .id")
+          # One "<id>\t<draft>" line per release carrying this tag. --paginate
+          # runs the jq filter once per page, so the filter has to emit a line
+          # per release; building an array would yield one array per page.
+          gh api "repos/$GITHUB_REPOSITORY/releases" --paginate \
+            --jq ".[] | select(.tag_name == \"$TAG\") | \"\(.id)\t\(.draft)\"" \
+            > releases.tsv
+
+          # Prefer the draft. A tag can end up with two releases — if someone
+          # created the release by hand, tauri-action leaves it alone and adds
+          # its own draft alongside it (see the header comment) — and the assets
+          # to rename are always on the draft that tauri-action uploaded into,
+          # never on the published one.
+          RELEASE_ID=$(awk -F'\t' '$2 == "true" { print $1; exit }' releases.tsv)
+          if [ -z "$RELEASE_ID" ]; then
+            RELEASE_ID=$(awk -F'\t' 'NR == 1 { print $1 }' releases.tsv)
+          fi
 
           if [ -z "$RELEASE_ID" ] || [ "$RELEASE_ID" = "null" ]; then
             echo "::error::No release found for tag $TAG"
             exit 1
           fi
 
-          gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets" --paginate \
-            --jq '.[] | "\(.id)\t\(.name)"' > assets.tsv
+          if [ "$(wc -l < releases.tsv)" -gt 1 ]; then
+            echo "::warning::Tag $TAG has more than one release; renaming assets on $RELEASE_ID. Check for a duplicate release created by hand."
+          fi
 
-          while IFS=$'\t' read -r id name; do
+          gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets" --paginate \
+            --jq '.[] | "\(.id)\t\(.name)\t\(.label // "")"' > assets.tsv
+
+          while IFS=$'\t' read -r id name label; do
             [ -z "${name:-}" ] && continue
+            label="${label:-}"
 
             # The macOS .app is a directory, so tauri-action tars it purely to
             # have something uploadable. It is not an installer and there is no
@@ -198,17 +234,36 @@ jobs:
 
             new="${PRODUCT}-${VERSION}-${os}-${arch}${suffix}.${ext}"
 
-            if [ "$new" = "$name" ]; then
+            # The release page renders an asset's `label` whenever one is set and
+            # falls back to `name` only when it is empty — and tauri-action
+            # uploads every bundle with `label` set to the original filename.
+            # Patching `name` alone therefore fixes the download URL and the
+            # release *edit* view while the release page carries on displaying
+            # the Tauri names, which is exactly what happened on v1.8.0 and
+            # v1.8.1 (cleared by hand afterwards). Clear the label in the same
+            # request. That is also why an already-correct name cannot simply be
+            # skipped: its label may still need clearing.
+            if [ "$new" = "$name" ] && [ -z "$label" ]; then
               echo "unchanged: $name"
               continue
             fi
 
-            echo "$name  ->  $new"
-            gh api --method PATCH \
-              "repos/$GITHUB_REPOSITORY/releases/assets/$id" \
-              -f name="$new" --silent
+            if [ "$new" = "$name" ]; then
+              echo "clearing label on: $name"
+            else
+              echo "$name  ->  $new"
+            fi
+
+            # Sent as a JSON body rather than -f name=... because -f has no way
+            # to express an empty string, and an omitted label is left as-is
+            # rather than cleared. $new is built from the fixed tokens above, so
+            # it needs no escaping.
+            printf '{"name":"%s","label":""}' "$new" \
+              | gh api --method PATCH \
+                  "repos/$GITHUB_REPOSITORY/releases/assets/$id" \
+                  --input - --silent
           done < assets.tsv
 
           echo "--- final asset names ---"
           gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets" \
-            --jq '.[].name'
+            --jq '.[] | "\(.name)\tlabel=[\(.label // "")]"'
