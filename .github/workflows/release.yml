@@ -28,13 +28,32 @@ name: Release
 # Note: the tag must match the version in tauri.conf.json, package.json and
 # Cargo.toml. Nothing enforces that automatically.
 
-# Deliberately tag-only. A workflow_dispatch trigger would set github.ref_name
-# to the branch name, producing a draft release literally called "main". Re-run
-# failed jobs from the Actions UI instead — that preserves the original ref.
+# Two ways in, and both end up with a real tag name in TAG_NAME below.
+#
+#   push: tags   — the normal route. `git push origin v1.9.0`.
+#   workflow_call — used by version-bump.yml, which creates the tag itself and
+#                   then calls this workflow directly. That call is NOT
+#                   optional plumbing: a tag pushed by a workflow using the
+#                   default GITHUB_TOKEN does not trigger another workflow, so
+#                   the `push: tags` route above would simply never fire for a
+#                   bot-created tag. Calling this workflow sidesteps that
+#                   without needing a PAT.
+#
+# Still no workflow_dispatch: dispatching from the Actions UI would set
+# github.ref_name to the branch name and produce a draft release literally
+# called "main". Re-run failed jobs from the Actions UI instead — that preserves
+# the original ref. Every step below reads `inputs.tag || github.ref_name` so
+# the two entry points share one code path; `inputs.tag` is empty on a tag push.
 on:
   push:
     tags:
       - 'v*'
+  workflow_call:
+    inputs:
+      tag:
+        description: 'Version tag to build and release, e.g. v1.9.0. Must already exist.'
+        required: true
+        type: string
 
 permissions:
   contents: write # required to create the release and upload assets
@@ -59,14 +78,22 @@ jobs:
             args: ''
 
     steps:
+      # Explicit ref rather than the default. On a tag push the default would be
+      # right anyway, but on a workflow_call the default is the *caller's* SHA —
+      # for version-bump.yml that is the commit before the bump, so the build
+      # would carry the old version.
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.ref_name }}
 
       # Fail fast if the tag disagrees with the manifests, rather than shipping
       # installers whose filenames and in-app version don't match the release.
       - name: Verify tag matches package version
         shell: bash
+        env:
+          TAG_NAME: ${{ inputs.tag || github.ref_name }}
         run: |
-          TAG="${GITHUB_REF_NAME#v}"
+          TAG="${TAG_NAME#v}"
           PKG=$(node -p "require('./package.json').version")
           CONF=$(node -p "require('./src-tauri/tauri.conf.json').version")
           echo "tag=$TAG package.json=$PKG tauri.conf.json=$CONF"
@@ -123,8 +150,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: ${{ github.ref_name }}
+          tagName: ${{ inputs.tag || github.ref_name }}
+          releaseName: ${{ inputs.tag || github.ref_name }}
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
@@ -145,12 +172,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.ref_name }}
 
       - name: Rename release assets
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           set -euo pipefail
           VERSION="${TAG#v}"

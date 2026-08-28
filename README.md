@@ -121,20 +121,33 @@ These are identified from the code rather than from a failed build:
 
 ### Builds and Releases
 
-Three workflows cover this:
+Four workflows cover this:
 
 | Workflow | Trigger | What it does |
 |----------|---------|--------------|
 | **CI** | every push and PR | Lint, test and build the web app on Node 22 and 24 |
 | **Desktop Build** | push to `main`, PRs touching `src-tauri/`, manual | Compile and bundle the desktop app on Windows, macOS and Linux; attach installers to the run |
-| **Release** | pushing a `v*` tag | Build all three platforms and attach the installers to a **draft** GitHub Release |
+| **Release** | pushing a `v*` tag, or called by Version Bump and Release | Build all three platforms and attach the installers to a **draft** GitHub Release |
+| **Version Bump and Release** | manual | Bump the version everywhere, draft a changelog, verify, tag, and run Release |
 
-Releases are drafted rather than published automatically, so the binaries can be checked before anyone is offered them. To cut a release, tag a commit whose version matches `package.json`, `tauri.conf.json` and `Cargo.toml`, push the tag, then review and publish the draft:
+Releases are drafted rather than published automatically, so the binaries can be checked before anyone is offered them.
+
+#### The usual route: Version Bump and Release
+
+After merging a batch of Dependabot PRs, run **Actions → Version Bump and Release → Run workflow**. Pick `patch`, `minor` or `major` (or type an exact version), and it will bump all five version sites, draft a `CHANGELOG.md` section listing everything merged since the last tag, run lint/test/build as a gate, commit, tag, and hand off to the Release workflow. Tick **Dry run** to see the version and changelog it would produce without touching the repository.
+
+Nothing is committed if lint, test or build fails, so a bad batch of merges leaves `main` untouched. The changelog section it writes is a factual list of merges, not finished prose — expand it before publishing the draft release.
+
+#### The manual route
+
+Tag a commit whose version matches `package.json`, `tauri.conf.json` and `Cargo.toml`, push the tag, then review and publish the draft:
 
 ```bash
 git tag v1.5.2
 git push origin v1.5.2
 ```
+
+Either way, publishing the draft is a deliberate manual step. Do not create the release yourself in the GitHub UI — publish the draft the workflow produces; see the header comment in `.github/workflows/release.yml` for why.
 
 **All builds are unsigned.** macOS will report that the app "cannot be opened because the developer cannot be verified", and Windows SmartScreen will warn on first run. Signing needs a paid Apple Developer account and a Windows code-signing certificate, neither of which is configured.
 

@@ -4,6 +4,21 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.1]
+
+### Fixed
+
+- **File > Print and Ctrl+P printed a single clipped page of the app window instead of the document.** Both were a bare `window.print()`, so the browser printed the live app DOM — and that DOM cannot reflow for print: the shell is a fixed-height flex tree with `overflow-hidden` at three levels wrapping the editor's `overflow-y-auto` scroll viewport, so only the first viewport-height slice ever reached the printer. Printing now builds a standalone document from `editor.getHTML()` and prints it in a hidden iframe (`src/lib/print.ts`), leaving the app DOM untouched, and a single `handlePrint` in `App.tsx` serves both entry points. Overriding the layout in `@media print` instead was considered and rejected as too fragile — there is no visual-regression tooling here, so a broken override would be invisible to CI.
+- **The print iframe stole keyboard focus and never gave it back.** `frameWindow.focus()` is needed so the print targets the iframe rather than the parent, but without restoring focus afterwards the editor went deaf after a single print: typing and every shortcut, Ctrl+P included, landed in the hidden frame. `printHtmlDocument()` now captures `document.activeElement` up front and restores it both after `print()` returns and on iframe removal. Build, tests and lint stayed green the whole time this was broken; only driving two consecutive prints in a real browser surfaced it.
+- **Mermaid diagrams printed as source rather than as diagrams.** `Mermaid.ts`'s `renderHTML` emits `<pre><code class="language-mermaid">`, so `getHTML()` yields the fence content rather than the rendered figure. `inlineMermaidDiagrams()` re-renders each block and substitutes the SVG, forcing `theme: 'default'` because `MermaidNodeView` renders at the *app* theme and a diagram authored in dark mode would otherwise print dark-on-white. A failed render leaves the original `<pre>` in place so the source still prints. Note that "Export as HTML" deliberately does not do this substitution — exported files still contain the source fence.
+
+### Changed
+
+- The print stylesheet is now the one already inside `wrapHtmlDocument()` (`src/lib/markdown.ts`), so print output and "Export as HTML" cannot drift apart. That is also why the new `@page`, `break-inside` and `table-header-group` rules live there rather than in `index.css`, which is not loaded inside the iframe.
+- The `@media print` block in `src/index.css` was largely dead code — three of its five hide-selectors matched nothing in the current DOM — and is replaced by a small fallback for the window being printed by some route other than File > Print. It hides the app shell and shows a "use File > Print" line rather than emitting a clipped screenshot.
+
+Verified in a real browser across 28 checks: all 45 headings of a long document present across four A4 pages where only 21.3% of it was visible on screen, no app chrome leaking into the output, diagrams inlined as light SVG with the app in dark mode, both entry points reaching the same handler, typing still working after printing, and the page-break rules confirmed under print media emulation. Printing inside the Tauri WebView2 build cannot be automated — a native print dialog is not scriptable — and was confirmed by hand shortly after this release.
+
 ## [1.8.0]
 
 ### Changed
