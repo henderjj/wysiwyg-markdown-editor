@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **When adding or changing user-facing features, update `USER_GUIDE.md` and `README.md`** with relevant documentation. `USER_GUIDE.md` is written for end users (how to use features). `README.md` is the project overview (feature list, supported elements, tech stack).
 
-**When work is complete and ready to commit, check whether the app version needs incrementing** (new feature → minor, bug fix → patch). The version is recorded in five places that must stay in sync: `package.json`, `package-lock.json` (sync via `npm install --package-lock-only`), `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`, and the `wysiwyg-markdown` entry in `src-tauri/Cargo.lock` (do not touch other crates' version lines). Include the new version in the commit message title, e.g. `(v1.4.1)`. Skip the bump only for changes with no shipped-behavior impact (docs-only, test-only, tooling).
+**When work is complete and ready to commit, check whether the app version needs incrementing** (new feature → minor, bug fix → patch). The version is recorded in five places that must stay in sync: `package.json`, `package-lock.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`, and the `wysiwyg-markdown` entry in `src-tauri/Cargo.lock` (do not touch other crates' version lines). Do not edit them by hand — run `node scripts/bump-version.mjs <patch|minor|major|x.y.z>`, which edits all five with anchored replacements and then verifies that all five actually agree before exiting. Include the new version in the commit message title, e.g. `(v1.4.1)`. Skip the bump only for changes with no shipped-behavior impact (docs-only, test-only, tooling).
 
 ## Build & Dev Commands
 
@@ -17,6 +17,17 @@ npm run tauri:build  # Tauri desktop production build
 ```
 
 Tests run with vitest (`npm test` → `vitest run`, jsdom environment). The main suite is `src/lib/markdownRoundtrip.test.ts`.
+
+## Releasing
+
+The normal route is the **Version Bump and Release** workflow (`.github/workflows/version-bump.yml`), run manually from the Actions tab — built for the "merged a batch of Dependabot PRs, now ship it" case. It bumps the version via `scripts/bump-version.mjs`, drafts a `CHANGELOG.md` section via `scripts/release-notes.mjs`, gates on lint/test/build, commits, tags, and calls `release.yml`. A `dry_run` input does everything except commit, push and tag.
+
+Two non-obvious constraints are baked into that workflow, both consequences of the same GitHub rule — **a workflow using the default `GITHUB_TOKEN` cannot trigger another workflow**:
+
+- It **calls** `release.yml` as a reusable workflow rather than pushing a tag and relying on `on: push: tags`. A bot-pushed tag fires nothing, so the tag would appear with no build behind it. `release.yml` therefore takes a `workflow_call` input `tag`, and every step reads `${{ inputs.tag || github.ref_name }}` so the tag-push and workflow-call routes share one code path. Its checkout is pinned to that ref: on a `workflow_call` the default checkout ref is the *caller's* SHA, which is the commit **before** the bump, so an unpinned checkout would build the old version. The alternative to all this is a PAT or GitHub App token — rejected because it is a secret to rotate.
+- The bump commit pushed to `main` **does not trigger `ci.yml` or `desktop.yml`** either. That is why lint/test/build run inside the bump job itself, before anything is committed. Nothing else will run them for that commit. The desktop build is deliberately not repeated there: `desktop.yml` already runs on every push to `main` and on any PR touching `src-tauri/`, `package.json` or the lockfile.
+
+`release.yml` still creates the release as a **draft**, and still must not be raced by a hand-made release in the GitHub UI — see its header comment for the failure mode that produced an empty v1.8.1 release.
 
 ## Architecture
 

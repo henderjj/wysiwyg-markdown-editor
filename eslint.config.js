@@ -37,4 +37,16 @@ export default tseslint.config(
       globals: globals.node,
     },
   },
+  // Release tooling run by Node from the CLI and from .github/workflows, not
+  // bundled into the app. Without this block they match no config object at
+  // all and flat config silently skips them.
+  {
+    files: ['scripts/**/*.mjs'],
+    extends: [js.configs.recommended],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      globals: globals.node,
+    },
+  },
 )

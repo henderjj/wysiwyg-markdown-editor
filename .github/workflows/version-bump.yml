@@ -1,0 +1,182 @@
+name: Version Bump and Release
+
+# The "I've merged a batch of Dependabot PRs, now ship it" button.
+#
+# Run it from Actions → Version Bump and Release -> Run workflow. It bumps the
+# version in all five places, drafts a CHANGELOG section from what has been
+# merged since the last tag, gates on lint/test/build, commits and tags, and
+# then hands off to release.yml to build the three-platform installers into a
+# DRAFT release. Publishing that draft is still a manual step, deliberately --
+# see the header of release.yml.
+#
+# Two things about this that are not obvious:
+#
+#   1. It calls release.yml rather than just pushing a tag and letting
+#      `on: push: tags` catch it. A tag pushed with the default GITHUB_TOKEN
+#      does NOT trigger another workflow — GitHub suppresses that to stop
+#      workflows recursing. The tag would appear and nothing would build. The
+#      alternatives are a PAT or a GitHub App token, both of which mean a
+#      secret to rotate; calling the workflow directly needs neither.
+#
+#   2. For the same reason, the version-bump commit pushed to main does NOT
+#      trigger ci.yml or desktop.yml. That is why lint/test/build run here, in
+#      this job, before anything is committed. Nothing else will run them for
+#      this commit.
+#
+# Dry run first if you want to see the version and changelog it would produce
+# without touching the repo.
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Which part of the version to increment'
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+      version:
+        description: 'Exact version instead of a bump, e.g. 2.0.0 (optional; overrides the choice above)'
+        type: string
+        required: false
+      update_changelog:
+        description: 'Draft a CHANGELOG section from the merges since the last tag'
+        type: boolean
+        default: true
+      release:
+        description: 'Tag and build the installers into a draft release'
+        type: boolean
+        default: true
+      dry_run:
+        description: 'Do everything except commit, push and tag'
+        type: boolean
+        default: false
+
+# Two of these racing would produce two commits fighting over the same version.
+concurrency:
+  group: version-bump
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    name: Bump version and verify
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write # commits the bump and pushes the tag
+
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+      # Empty unless a tag was actually pushed, which is what gates the release
+      # job below — so a dry run, or `release: false`, builds nothing.
+      tag: ${{ steps.tag.outputs.tag }}
+
+    steps:
+      # Full history: release-notes.mjs walks back to the previous version tag,
+      # and a shallow clone has neither the tags nor the commits to walk.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22.x
+          cache: npm
+
+      - run: npm ci
+
+      - name: Bump version in all five manifests
+        id: bump
+        env:
+          SPEC: ${{ inputs.version || inputs.bump }}
+        run: |
+          set -euo pipefail
+          node scripts/bump-version.mjs "$SPEC" | tee "$RUNNER_TEMP/bump.log"
+          VERSION=$(tail -n1 "$RUNNER_TEMP/bump.log" | cut -d= -f2)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Draft the CHANGELOG section
+        if: ${{ inputs.update_changelog }}
+        run: node scripts/release-notes.mjs "${{ steps.bump.outputs.version }}" --insert
+
+      # The gate. Nothing is committed if any of these fail, so a bad batch of
+      # Dependabot merges leaves main exactly as it was. The desktop build is
+      # not repeated here: desktop.yml already runs on every push to main and on
+      # any PR touching src-tauri, package.json or the lockfile, so the Tauri
+      # side of a Dependabot batch has been built before it was merged.
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Show what would be committed
+        run: git --no-pager diff --stat
+
+      - name: Commit and push
+        if: ${{ !inputs.dry_run }}
+        env:
+          VERSION: ${{ steps.bump.outputs.version }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          # Explicit paths rather than `git add -A`: the build above writes
+          # dist/ into the workspace and none of it belongs in the commit.
+          git add package.json package-lock.json \
+                  src-tauri/tauri.conf.json src-tauri/Cargo.toml src-tauri/Cargo.lock \
+                  CHANGELOG.md
+          git commit -m "Bump version to $VERSION"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+
+      - name: Tag
+        id: tag
+        if: ${{ inputs.release && !inputs.dry_run }}
+        env:
+          VERSION: ${{ steps.bump.outputs.version }}
+        run: |
+          set -euo pipefail
+          TAG="v$VERSION"
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "::error::Tag $TAG already exists"
+            exit 1
+          fi
+          git tag -a "$TAG" -m "$TAG"
+          git push origin "$TAG"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Summary
+        env:
+          VERSION: ${{ steps.bump.outputs.version }}
+          TAG: ${{ steps.tag.outputs.tag }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          {
+            echo "### Version $VERSION"
+            echo
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "Dry run - nothing was committed, pushed or tagged."
+            elif [ -n "$TAG" ]; then
+              echo "Committed and tagged **$TAG**. The installers are building now."
+              echo
+              echo "The release is created as a **draft**. Expand the auto-drafted"
+              echo "CHANGELOG section into real release notes, check the installers,"
+              echo "then publish it from the Releases page."
+            else
+              echo "Committed the bump. No tag was created, so nothing is building."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # Same workflow the `git push origin v1.9.0` route uses — see release.yml's
+  # header for why it is called rather than triggered.
+  release:
+    name: Release
+    needs: bump
+    if: ${{ needs.bump.outputs.tag != '' }}
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ needs.bump.outputs.tag }}
