@@ -4,6 +4,17 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.4]
+
+### Changed
+
+- Merged 5 Dependabot dependency updates since v1.8.3:
+  - Bump the tauri group across 1 directory with 4 updates (#38)
+  - Bump @types/react-dom in the react group across 1 directory (#39)
+  - Bump the tiptap group with 13 updates (#37)
+  - Bump the development-minor-patch group with 4 updates (#40)
+  - Bump vitest from 4.1.11 to 5.0.0 (#41)
+
 ## [1.8.3]
 
 ### Changed
