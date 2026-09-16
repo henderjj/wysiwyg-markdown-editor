@@ -4,6 +4,21 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.5]
+
+### Changed
+
+- Merged 5 Dependabot dependency updates since v1.8.4:
+  - Bump lodash-es from 4.17.23 to 4.18.1 with override. (#47)
+  - Bump vite from 8.2.2 to 8.3.0 in the vite group across 1 directory (#43)
+  - Bump the react group across 1 directory with 4 updates (#42)
+  - Bump typescript-eslint in the development-minor-patch group (#44)
+  - Bump mermaid from 11.17.2 to 12.0.0 (#45)
+
+### Other changes
+
+- Update package.json (#46)
+
 ## [1.8.4]
 
 ### Changed
