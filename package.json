@@ -1,7 +1,7 @@
 {
   "name": "wysiwyg-markdown",
   "private": true,
-  "version": "1.8.5",
+  "version": "1.9.0",
   "type": "module",
   "description": "A WYSIWYG editor that produces GitHub Flavored Markdown",
   "license": "MIT",
@@ -19,6 +19,7 @@
     "tauri:build": "tauri build"
   },
   "dependencies": {
+    "@floating-ui/dom": "^1.8.0",
     "@tauri-apps/api": "^2.11.1",
     "@tauri-apps/plugin-clipboard-manager": "^2.3.3",
     "@tauri-apps/plugin-dialog": "^2.7.3",

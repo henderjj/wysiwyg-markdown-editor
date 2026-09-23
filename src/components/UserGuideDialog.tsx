@@ -172,6 +172,16 @@ export function UserGuideDialog({ isOpen, onClose }: UserGuideDialogProps) {
             </p>
           </Section>
 
+          <Section title="Review Comments">
+            <ul className="list-disc list-inside space-y-1 ml-2">
+              <li>Select text and click <strong>💬</strong> or press <Kbd>Ctrl+Shift+M</Kbd> to comment on it. With nothing selected, a 💬 marker is inserted at the cursor.</li>
+              <li>Type the comment straight into the bubble that opens; <Kbd>Enter</Kbd> saves, <Kbd>Escape</Kbd> cancels.</li>
+              <li>Hover over a comment, or move the cursor into it, to show its bubble. Use the bubble's ✎ and 🗑 buttons to edit or delete it (highlighted text is kept).</li>
+              <li>Choose whether comments include your name and the date in <strong>Options &gt; Preferences</strong> (<Kbd>Ctrl+,</Kbd>).</li>
+              <li>Comments are saved as CriticMarkup: <code>{'{==text==}{>>comment<<}'}</code>.</li>
+            </ul>
+          </Section>
+
           <Section title="Find and Replace">
             <ul className="list-disc list-inside space-y-1 ml-2">
               <li><Kbd>Ctrl+F</Kbd> — Open Find bar.</li>
@@ -246,6 +256,8 @@ export function UserGuideDialog({ isOpen, onClose }: UserGuideDialogProps) {
               <span><Kbd>Ctrl+Tab</Kbd> Next tab</span>
               <span><Kbd>Ctrl+Shift+Tab</Kbd> Previous tab</span>
               <span><Kbd>Alt+Enter</Kbd> Expand diagram</span>
+              <span><Kbd>Ctrl+Shift+M</Kbd> Add / edit comment</span>
+              <span><Kbd>Ctrl+,</Kbd> Preferences</span>
             </div>
           </Section>
 

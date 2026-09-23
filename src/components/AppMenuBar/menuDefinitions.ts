@@ -135,6 +135,8 @@ export function buildMenus(state: MenuState): MenuDefinition[] {
         ...(state.isTauriApp ? [
           { type: 'toggle' as const, label: 'Restore Previous Session', checked: state.restorePreviousSession, action: 'options.toggleRestoreSession' },
         ] : []),
+        { type: 'divider' },
+        { type: 'action', label: 'Preferences...', shortcut: 'Ctrl+,', action: 'options.preferences' },
       ],
     },
     {

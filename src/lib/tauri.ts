@@ -90,6 +90,18 @@ export async function getCliFilePath(): Promise<string | null> {
   }
 }
 
+/** The OS user's display name, or null in the browser build or on failure. */
+export async function getUserRealName(): Promise<string | null> {
+  if (!isTauri()) return null
+  try {
+    const { invoke } = await import('@tauri-apps/api/core')
+    const name = await invoke<string>('get_user_real_name')
+    return name.trim() || null
+  } catch {
+    return null
+  }
+}
+
 export async function readFileByPath(path: string): Promise<string | null> {
   if (!isTauri()) return null
   try {

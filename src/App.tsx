@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect, Fragment, KeyboardEvent, DragEvent, PointerEvent as ReactPointerEvent, MouseEvent as ReactMouseEvent } from 'react'
+import { useState, useCallback, useRef, useEffect, useMemo, Fragment, KeyboardEvent, DragEvent, PointerEvent as ReactPointerEvent, MouseEvent as ReactMouseEvent } from 'react'
 import { Editor as TiptapEditor } from '@tiptap/react'
 import { EditorState } from '@tiptap/pm/state'
 import { Editor } from './components/Editor'
@@ -7,6 +7,8 @@ import { TabContextMenu } from './components/TabContextMenu'
 import { DocumentMap } from './components/Editor/DocumentMap'
 import { KeyboardShortcutsDialog } from './components/KeyboardShortcutsDialog'
 import { UserGuideDialog } from './components/UserGuideDialog'
+import { PreferencesDialog } from './components/PreferencesDialog'
+import { loadCommentSettings, saveCommentSettings, type CommentSettings } from './lib/commentSettings'
 import packageJson from '../package.json'
 import {
   exportMarkdown,
@@ -29,7 +31,7 @@ import { buildPrintDocument, inlineMermaidDiagrams, printHtmlDocument } from './
 import { markdownToHtml } from './lib/markdownParser'
 import { pasteAsMarkdown } from './lib/pasteAsMarkdown'
 import { readClipboardText, writeClipboardText } from './lib/clipboard'
-import { isTauri, getCliFilePath, readFileByPath, setFilePath, getFilePath, watchFilePath, fileExists, pollFileRecreation } from './lib/tauri'
+import { isTauri, getCliFilePath, getUserRealName, readFileByPath, setFilePath, getFilePath, watchFilePath, fileExists, pollFileRecreation } from './lib/tauri'
 import { useTheme } from './hooks/useTheme'
 import { loadRecentFiles, addRecentFile, clearRecentFiles } from './lib/recentFiles'
 
@@ -168,6 +170,22 @@ function App() {
   const [showShortcutsDialog, setShowShortcutsDialog] = useState(false)
   const [showUserGuideDialog, setShowUserGuideDialog] = useState(false)
   const [showAboutDialog, setShowAboutDialog] = useState(false)
+  const [showPreferencesDialog, setShowPreferencesDialog] = useState(false)
+  const [commentSettings, setCommentSettings] = useState<CommentSettings>(loadCommentSettings)
+  // The OS user's display name (desktop only), the default comment author
+  const [osUserName, setOsUserName] = useState<string | null>(null)
+  useEffect(() => {
+    getUserRealName().then(setOsUserName)
+  }, [])
+  const editorCommentSettings = useMemo(() => ({
+    includeAuthor: commentSettings.includeAuthor,
+    includeTimestamp: commentSettings.includeTimestamp,
+    author: commentSettings.authorOverride || osUserName || '',
+  }), [commentSettings, osUserName])
+  const handleSaveCommentSettings = useCallback((settings: CommentSettings) => {
+    setCommentSettings(settings)
+    saveCommentSettings(settings)
+  }, [])
   const [searchBarMode, setSearchBarMode] = useState<'find' | 'findReplace' | null>(null)
   // Undo/redo availability, kept in real state and updated via a transaction
   // listener (set up in handleEditorReady) rather than read from editorRef
@@ -1141,6 +1159,7 @@ function App() {
           return next
         })
         break
+      case 'options.preferences': setShowPreferencesDialog(true); break
       case 'help.shortcuts': setShowShortcutsDialog(true); break
       case 'help.userGuide': setShowUserGuideDialog(true); break
       case 'help.about': setShowAboutDialog(true); break
@@ -1260,8 +1279,14 @@ if (action.startsWith('file.openRecent:')) {
           handlePrint()
           break
         case 'm':
+          // Ctrl+Shift+M is the editor's add/edit comment shortcut
+          if (e.shiftKey) break
           e.preventDefault()
           togglePreview()
+          break
+        case ',':
+          e.preventDefault()
+          setShowPreferencesDialog(true)
           break
         case 'd':
           e.preventDefault()
@@ -1854,6 +1879,7 @@ if (action.startsWith('file.openRecent:')) {
                 onCloseSearchBar={() => setSearchBarMode(null)}
                 initialShowReplace={searchBarMode === 'findReplace'}
                 zoom={zoom}
+                commentSettings={editorCommentSettings}
               />
             </div>
 
@@ -1931,6 +1957,14 @@ if (action.startsWith('file.openRecent:')) {
       <KeyboardShortcutsDialog
         isOpen={showShortcutsDialog}
         onClose={() => setShowShortcutsDialog(false)}
+      />
+
+      <PreferencesDialog
+        isOpen={showPreferencesDialog}
+        onClose={() => setShowPreferencesDialog(false)}
+        commentSettings={commentSettings}
+        onSave={handleSaveCommentSettings}
+        detectedAuthor={osUserName}
       />
 
       {/* User guide dialog */}

@@ -264,6 +264,51 @@ You can also use the shortcut `Ctrl+Shift+B` to toggle a blockquote.
 
 ---
 
+## Review Comments
+
+You can leave review comments on a document without leaving the editor, which is handy when reviewing Markdown outside a pull request. Comments are saved in the file itself using [CriticMarkup](https://github.com/CriticMarkup/CriticMarkup-toolkit), so they are still readable in any text editor and in the Markdown preview.
+
+### Adding a Comment
+
+- **On selected text** — select some text within a single paragraph, heading, list item or table cell, then click **💬** on the toolbar or press `Ctrl+Shift+M`. A comment bubble opens next to the text; type your comment and press `Enter` (or click ✓). The text is then highlighted in amber with a dotted underline.
+- **At the cursor** — with nothing selected, click **💬** or press `Ctrl+Shift+M`. The bubble opens at the cursor, and saving drops a **💬** marker there.
+
+Press `Escape`, click ✕, or click anywhere else to cancel. The button is disabled when the selection spans more than one paragraph, and inside code. The comment box wraps and grows so you can read a long comment in full, but comments are saved as a single paragraph: `Enter` saves rather than starting a new line, and line breaks in pasted text are turned into spaces.
+
+### Reading a Comment
+
+Hover over highlighted text or a 💬 marker to see the comment in a bubble. You can also move the cursor into the comment with the keyboard; the bubble appears without taking focus away from the editor. The bubble follows the text as you scroll, flips above the text when there isn't room below, and hides when the text scrolls out of view.
+
+### Editing and Deleting
+
+Each comment bubble has two buttons:
+
+- **✎ Edit** — the bubble switches to an input with the current text (also `Ctrl+Shift+M` with the cursor in the comment). Only the comment text changes; the original author and date are kept.
+- **🗑 Delete** — removes the comment. For highlighted text, the text itself is kept and only the highlight and comment are removed.
+
+To reach the buttons with the mouse, move the pointer from the text onto the bubble. The same actions are also on the toolbar (**💬** and **💬✕**) while the cursor is inside a comment or right next to a 💬 marker.
+
+### Author and Date
+
+New comments start with who wrote them and when, e.g. `[Joe Bloggs 2026-09-21 14:00]: My review comment.` Choose what to include in **Options > Preferences** (`Ctrl+,`):
+
+- **Include author name** and **Include date and time** — each can be turned off.
+- **Author name** — in the desktop app this defaults to the name on your computer account; type a different name to override it. The browser version can't read your account name, so set it here if you want an author on your comments.
+
+Comments written in other formats are shown as plain comment text.
+
+### How Comments Are Saved
+
+| In the editor | In the Markdown file |
+|---|---|
+| Comment on text | `{==highlighted text==}{>>comment<<}` |
+| Comment at the cursor | `{>>comment<<}` |
+| Highlight without a comment (from other tools) | `{==highlighted text==}` |
+
+If you type CriticMarkup characters as ordinary text, they are saved with a backslash (e.g. `\{==`) so they don't turn into a comment when the file is reopened. Other CriticMarkup forms (additions `{++ ++}`, deletions `{-- --}`, substitutions `{~~ ~> ~~}`) are not supported and appear as ordinary text.
+
+---
+
 ## Find and Replace
 
 ### Opening Find
@@ -377,6 +422,7 @@ Press `F1` or open **Help > Keyboard Shortcuts** for a quick-reference dialog. H
 | `Ctrl+Shift+X` | Strikethrough |
 | `Ctrl+E` | Inline code |
 | `Ctrl+Shift+B` | Blockquote |
+| `Ctrl+Shift+M` | Add / edit review comment |
 
 ### Edit
 
@@ -406,6 +452,7 @@ Press `F1` or open **Help > Keyboard Shortcuts** for a quick-reference dialog. H
 | `Ctrl+-` | Zoom out |
 | `Ctrl+0` | Reset zoom |
 | `Alt+Enter` | Expand Mermaid diagram (cursor in a diagram) |
+| `Ctrl+,` | Preferences |
 | `F1` | Keyboard shortcuts |
 
 ### Tab Key Behavior

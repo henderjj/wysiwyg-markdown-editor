@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { markdownToHtml, ESCAPABLE_PUNCTUATION } from './markdownParser'
 import { htmlToMarkdown } from './markdown'
+import { buildComment, parseCommentMeta, replaceCommentBody } from '../extensions/critic-markup/commentMeta'
 
 /** Convert markdown → HTML → markdown */
 function roundtrip(md: string): string {
@@ -774,5 +775,132 @@ describe('escape handling', () => {
         expect(roundtrip(first)).toBe(first)
       }
     })
+  })
+})
+
+// ─── CriticMarkup comments ─────────────────────────────────────────────────
+
+describe('CriticMarkup', () => {
+  const stable = (md: string) => {
+    const first = roundtrip(md)
+    expect(first).toBe(md + '\n')
+    expect(roundtrip(first)).toBe(first)
+  }
+
+  describe('import', () => {
+    it('highlight + comment becomes a commented mark', () => {
+      expect(markdownToHtml('a {==b==}{>>note<<} c')).toBe(
+        '<p>a <mark class="critic-comment" data-comment="note">b</mark> c</p>')
+    })
+
+    it('lone highlight and lone comment', () => {
+      expect(markdownToHtml('{==b==}')).toBe('<p><mark class="critic-highlight">b</mark></p>')
+      expect(markdownToHtml('a{>>note<<}')).toBe(
+        '<p>a<span class="critic-comment-marker" data-critic-comment="note">💬</span></p>')
+    })
+
+    it('comment body is not parsed as markdown and is attribute-safe', () => {
+      expect(markdownToHtml('{==b==}{>>*x* [l](u) "q" & <t><<}')).toBe(
+        '<p><mark class="critic-comment" data-comment="*x* [l](u) &quot;q&quot; &amp; &lt;t&gt;">b</mark></p>')
+    })
+
+    it('formatting applies inside the highlighted text', () => {
+      expect(markdownToHtml('{==**b** [l](u)==}{>>n<<}')).toBe(
+        '<p><mark class="critic-comment" data-comment="n"><strong>b</strong> <a href="u">l</a></mark></p>')
+    })
+
+    it('a lone highlight does not swallow a later pair', () => {
+      expect(markdownToHtml('{==a==} and {==b==}{>>c<<}')).toBe(
+        '<p><mark class="critic-highlight">a</mark> and <mark class="critic-comment" data-comment="c">b</mark></p>')
+    })
+
+    it('escaped and code-span syntax stays literal', () => {
+      expect(markdownToHtml('\\{==a==}')).toBe('<p>{==a==}</p>')
+      expect(markdownToHtml('`{==a==}{>>b<<}`')).toBe('<p><code>{==a==}{&gt;&gt;b&lt;&lt;}</code></p>')
+    })
+
+    it('a code span inside an external comment keeps its source text', () => {
+      expect(markdownToHtml('{>>use `x`<<}')).toBe(
+        '<p><span class="critic-comment-marker" data-critic-comment="use `x`">💬</span></p>')
+    })
+  })
+
+  describe('roundtrip', () => {
+    it.each([
+      'a {==b==}{>>note<<} c',
+      '{==b==}{>>[Joe Bloggs 2026-09-21 14:00]: My review comment.<<}',
+      '{==b==}',
+      'text{>>note<<} more',
+      '{==**bold** and [link](http://x.y)==}{>>n<<}',
+      '{==b==}{>><<}',
+      '{==b==}{>> spaced <<}',
+      '# Heading {==b==}{>>n<<}',
+      '- item {==b==}{>>n<<}',
+      '> quote {==b==}{>>n<<}',
+    ])('%s', (md) => stable(md))
+
+    it('comment body with markdown-special characters', () => {
+      stable('{==b==}{>>*x* _y_ ~z~ \\\\ \\` \\<<} done<<}')
+      expect(markdownToHtml('{==b==}{>>\\\\ \\` \\<<} done<<}')).toContain('data-comment="\\ ` &lt;&lt;} done"')
+    })
+
+    it('external backticks in a comment normalize to escapes, then stay stable', () => {
+      const first = roundtrip('{>>use `x`<<}')
+      expect(first).toBe('{>>use \\`x\\`<<}\n')
+      expect(roundtrip(first)).toBe(first)
+    })
+
+    it('comment inside a table cell containing a pipe', () => {
+      const md = '| a | b |\n| --- | --- |\n| {==c==}{>>x \\| y<<} | d |'
+      stable(md)
+      expect(markdownToHtml(md)).toContain('data-comment="x | y"')
+    })
+  })
+
+  describe('export escaping of literal text', () => {
+    it('literal CriticMarkup typed as text is escaped', () => {
+      expect(htmlToMarkdown('<p>{==x==}{&gt;&gt;y&lt;&lt;}</p>')).toBe('\\{==x\\==}\\{>>y<<}\n')
+      expect(markdownToHtml('\\{==x\\==}\\{>>y<<}')).toBe('<p>{==x==}{&gt;&gt;y&lt;&lt;}</p>')
+    })
+
+    it('==} inside highlighted text cannot end it early', () => {
+      const md = htmlToMarkdown('<p><mark class="critic-comment" data-comment="n">a ==} b</mark></p>')
+      expect(md).toBe('{==a \\==} b==}{>>n<<}\n')
+      expect(markdownToHtml(md)).toBe('<p><mark class="critic-comment" data-comment="n">a ==} b</mark></p>')
+    })
+
+    it('newlines in a comment body are collapsed', () => {
+      expect(htmlToMarkdown('<p><mark data-comment="a\nb">x</mark></p>')).toBe('{==x==}{>>a b<<}\n')
+    })
+  })
+})
+
+describe('comment metadata', () => {
+  const opts = { includeAuthor: true, includeTimestamp: true, author: 'Joe Bloggs' }
+  const when = new Date(2026, 8, 21, 14, 0)
+
+  it('builds the prefix from settings', () => {
+    expect(buildComment('Hi', opts, when)).toBe('[Joe Bloggs 2026-09-21 14:00]: Hi')
+    expect(buildComment('Hi', { ...opts, includeTimestamp: false }, when)).toBe('[Joe Bloggs]: Hi')
+    expect(buildComment('Hi', { ...opts, includeAuthor: false }, when)).toBe('[2026-09-21 14:00]: Hi')
+    expect(buildComment('Hi', { ...opts, author: '' }, when)).toBe('[2026-09-21 14:00]: Hi')
+    expect(buildComment('Hi\nthere', { ...opts, includeAuthor: false, includeTimestamp: false }, when)).toBe('Hi there')
+    expect(buildComment('Hi', { ...opts, author: 'A [x]<<}' , includeTimestamp: false }, when)).toBe('[A x]: Hi')
+  })
+
+  it('parses all three prefix forms', () => {
+    expect(parseCommentMeta('[Joe Bloggs 2026-09-21 14:00]: Hi')).toEqual({ author: 'Joe Bloggs', timestamp: '2026-09-21 14:00', body: 'Hi' })
+    expect(parseCommentMeta('[Joe]: Hi')).toEqual({ author: 'Joe', timestamp: null, body: 'Hi' })
+    expect(parseCommentMeta(' [2026-09-21 14:00]: Hi ')).toEqual({ author: null, timestamp: '2026-09-21 14:00', body: 'Hi' })
+  })
+
+  it('treats other formats as plain text', () => {
+    expect(parseCommentMeta('@joe (2026/09/21): Hi')).toEqual({ author: null, timestamp: null, body: '@joe (2026/09/21): Hi' })
+    expect(parseCommentMeta(' plain ')).toEqual({ author: null, timestamp: null, body: 'plain' })
+  })
+
+  it('replacing the body keeps the prefix as written', () => {
+    expect(replaceCommentBody('[Joe 2026-09-21 14:00]: old', 'new')).toBe('[Joe 2026-09-21 14:00]: new')
+    expect(replaceCommentBody(' old ', 'new')).toBe('new')
   })
 })

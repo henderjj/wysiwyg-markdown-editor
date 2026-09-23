@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 import { common } from 'lowlight'
 import { TableCreationDialog } from './TableCreationDialog'
 import { ImageDialog } from './ImageDialog'
+import { getActiveComment, addCommentBlocker, deleteComment } from '../../extensions/critic-markup/CriticMarkup'
 
 const codeLanguages = Object.keys(common).sort()
 
@@ -55,6 +56,8 @@ interface MenuBarProps {
   editor: Editor | null
   showSearchBar?: boolean
   onToggleFind?: () => void
+  /** Open the add/edit comment bubble for the current selection */
+  onRequestComment?: () => void
 }
 
 interface MenuButtonProps {
@@ -429,7 +432,34 @@ function ImageMenu({ editor }: { editor: Editor }) {
   )
 }
 
-export function MenuBar({ editor, showSearchBar, onToggleFind }: MenuBarProps) {
+function CommentButtons({ editor, onRequestComment }: { editor: Editor; onRequestComment?: () => void }) {
+  const active = getActiveComment(editor.state)
+  if (!active) {
+    const blocker = addCommentBlocker(editor.state)
+    const action = editor.state.selection.empty ? 'Insert comment' : 'Comment on selection'
+    return (
+      <MenuButton
+        onClick={() => onRequestComment?.()}
+        disabled={blocker !== null || !onRequestComment}
+        title={blocker ? `${action} unavailable — ${blocker}` : `${action} (Ctrl+Shift+M)`}
+      >
+        💬
+      </MenuButton>
+    )
+  }
+  return (
+    <>
+      <MenuButton onClick={() => onRequestComment?.()} isActive title={active.comment === null ? 'Add comment to highlight (Ctrl+Shift+M)' : 'Edit comment (Ctrl+Shift+M)'}>
+        💬
+      </MenuButton>
+      <MenuButton onClick={() => deleteComment(editor, active)} title={active.kind === 'node' ? 'Delete comment' : active.comment === null ? 'Remove highlight' : 'Delete comment (keeps the text)'}>
+        <span className="text-xs">💬✕</span>
+      </MenuButton>
+    </>
+  )
+}
+
+export function MenuBar({ editor, showSearchBar, onToggleFind, onRequestComment }: MenuBarProps) {
   if (!editor) {
     return null
   }
@@ -618,6 +648,11 @@ export function MenuBar({ editor, showSearchBar, onToggleFind }: MenuBarProps) {
           ✕
         </MenuButton>
       )}
+
+      <Divider />
+
+      {/* Review comments (CriticMarkup) */}
+      <CommentButtons editor={editor} onRequestComment={onRequestComment} />
 
       <Divider />
 
