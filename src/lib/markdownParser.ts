@@ -423,17 +423,43 @@ function parseInline(text: string): string {
   const restoreEscapesInCode = (code: string): string =>
     // eslint-disable-next-line no-control-regex -- NUL is the deliberate placeholder sentinel; it cannot appear in input (stripped on normalize)
     code.replace(/\x00ESC(\d+)\x00/g, (_, i) => '\\' + escapeHtml(escaped[parseInt(i)]))
+  // codeSources keeps each span's original markdown (backticks included) so a
+  // span that landed inside a CriticMarkup comment can be put back verbatim —
+  // comments are plain text, not markdown.
   const codeSpans: string[] = []
-  result = result.replace(/``(.+?)``/g, (_, code) => {
+  const codeSources: string[] = []
+  result = result.replace(/``(.+?)``/g, (match, code) => {
     // Strip one leading and one trailing space per GFM spec
     const trimmed = code.replace(/^ (.+) $/, '$1')
     codeSpans.push(`<code>${restoreEscapesInCode(trimmed)}</code>`)
+    codeSources.push(restoreEscapesInCode(match))
     return `\x00CODE${codeSpans.length - 1}\x00`
   })
-  result = result.replace(/`([^`]+)`/g, (_, code) => {
+  result = result.replace(/`([^`]+)`/g, (match, code) => {
     codeSpans.push(`<code>${restoreEscapesInCode(code)}</code>`)
+    codeSources.push(restoreEscapesInCode(match))
     return `\x00CODE${codeSpans.length - 1}\x00`
   })
+
+  // CriticMarkup comments and highlights (see src/extensions/critic-markup/).
+  // Runs after the escape and code-span stashes, so \{== and `{==x==}` stay
+  // literal, and before emphasis/links, so formatting still applies inside the
+  // highlighted text. Matched against the entity-escaped text (>> is &gt;&gt;).
+  // The comment body is stashed so emphasis/link regexes can't rewrite it; it
+  // is already entity-escaped, so it can go straight into an attribute.
+  // Highlighted text may not contain ==} — otherwise the lazy match would run
+  // from one lone highlight into a later highlight+comment pair.
+  const comments: string[] = []
+  const stashComment = (body: string): string => {
+    // eslint-disable-next-line no-control-regex -- NUL is the deliberate placeholder sentinel
+    comments.push(body.replace(/\x00CODE(\d+)\x00/g, (_, i) => codeSources[parseInt(i)]))
+    return `\x00CMT${comments.length - 1}\x00`
+  }
+  result = result.replace(/\{==((?:(?!==\}).)+?)==\}\{&gt;&gt;(.*?)&lt;&lt;\}/g,
+    (_, text, body) => `<mark class="critic-comment" data-comment="${stashComment(body)}">${text}</mark>`)
+  result = result.replace(/\{==((?:(?!==\}).)+?)==\}/g, '<mark class="critic-highlight">$1</mark>')
+  result = result.replace(/\{&gt;&gt;(.*?)&lt;&lt;\}/g,
+    (_, body) => `<span class="critic-comment-marker" data-critic-comment="${stashComment(body)}">💬</span>`)
 
   // Bold (must come before italic). Underscore delimiters require a non-word
   // character on the outside — GFM forbids intraword _ emphasis (snake_case,
@@ -458,6 +484,11 @@ function parseInline(text: string): string {
   // Restore inline code spans
   // eslint-disable-next-line no-control-regex -- NUL is the deliberate placeholder sentinel; it cannot appear in input (stripped on normalize)
   result = result.replace(/\x00CODE(\d+)\x00/g, (_, i) => codeSpans[parseInt(i)])
+
+  // Restore CriticMarkup comment bodies (after code spans, so a CODE
+  // placeholder inside a body was already swapped for its source above)
+  // eslint-disable-next-line no-control-regex -- NUL is the deliberate placeholder sentinel; it cannot appear in input (stripped on normalize)
+  result = result.replace(/\x00CMT(\d+)\x00/g, (_, i) => comments[parseInt(i)])
 
   // Restore backslash-escaped characters as their literal form, entity-escaped
   // because they were stashed from the raw text (\& → &amp;, \< → &lt;)

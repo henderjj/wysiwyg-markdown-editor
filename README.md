@@ -17,6 +17,7 @@ Users interact with a familiar rich-text interface while the application maintai
 - **Mermaid diagrams** — ` ```mermaid ` blocks render as diagrams (read-only) with a per-block toggle to edit the raw source and re-render, plus an expanded viewer (**⤢ Expand** / `Alt+Enter`) with mouse-wheel zoom and click-drag pan
 - **Links and images** — insert and edit via dialogs with floating toolbars on selection (images display in-editor from `http(s)://` URLs; see [Known Limitations](#known-limitations))
 - **Blockquotes and horizontal rules**
+- **Review comments** — comment on selected text or at the cursor (Ctrl+Shift+M), typed directly into a comment bubble that also shows on hover or when the cursor is in a comment, with edit and delete buttons; stored in the file as [CriticMarkup](https://github.com/CriticMarkup/CriticMarkup-toolkit) (`{==text==}{>>comment<<}`); optional author and timestamp set in **Options > Preferences** (Ctrl+,), with the author defaulting to the OS account name in the desktop app
 - **Markdown shortcuts** — optionally type `# `, `**`, etc. to trigger formatting (toggle on/off)
 - **Backslash escapes** — type `\*`, `\#`, `\&`, etc. (any punctuation character) to insert literal markdown characters without triggering formatting; words with internal underscores like `snake_case` never turn italic
 
@@ -197,6 +198,7 @@ Markdown file  →  markdownToHtml()  →  TipTap editor  →  htmlToMarkdown() 
 | Tables | GFM pipe tables |
 | Horizontal rules | `---` |
 | Backslash escapes | Any punctuation: `\*`, `\#`, `\&`, `\\`, etc. |
+| Review comments (CriticMarkup) | `{==text==}{>>comment<<}`, `{>>comment<<}`, `{==text==}` |
 
 ## Known Limitations
 
@@ -207,6 +209,8 @@ The Markdown itself is unaffected — the reference is preserved verbatim on sav
 Fixing this needs two things: resolving relative paths against the open document's directory, and enabling Tauri's asset protocol so the webview is permitted to load local files at all. The browser build is more constrained still, since the File System Access API provides a file handle rather than a path.
 
 **Setext (underline-style) headings are not supported.** `Title` followed by a line of `===` is read as two paragraphs. Note that the `---` form is worse: `Title` followed by `---` becomes a paragraph plus a horizontal rule, because the `---` is matched as a thematic break first. Use ATX headings (`# Title`) instead.
+
+**Only CriticMarkup comments and highlights are supported.** Additions (`{++ ++}`), deletions (`{-- --}`) and substitutions (`{~~ ~> ~~}`) are shown and saved as ordinary text. A comment must sit within a single paragraph, heading, list item or table cell, and comment text is a single line. Backticks and backslashes inside a comment written by another tool are backslash-escaped the first time the file is saved.
 
 ## Contributing
 

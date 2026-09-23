@@ -74,8 +74,46 @@ turndownService.escape = function turndownEscape(text: string): string {
   // \. back as a literal dot and "1\. " cannot match its ordered-list regex.
   result = result.replace(/^(\s*)(\d+)\. /gm, '$1$2\\. ')
   result = result.replace(/^(\s*)([-+]) /gm, '$1\\$2 ')
+  // CriticMarkup: literal text that would reparse as a highlight or comment.
+  // Comments in the editor are marks/nodes, never text, so only text the user
+  // typed reaches here. "==}" is escaped too so it can't end a highlight early.
+  result = result.replace(/\{(?===|>>)/g, '\\{')
+  result = result.replace(/=(?==\})/g, '\\=')
   return result
 }
+
+// CriticMarkup comment bodies are plain text stored in an attribute, so
+// turndownEscape never sees them. The parser still runs its backslash-escape
+// pass over them, so: \ → \\, and escape ` (so no code span can form) and the
+// <<} terminator. Newlines would break the inline syntax, so collapse them.
+export function escapeCriticComment(body: string): string {
+  return body
+    .replace(/\r?\n/g, ' ')
+    .replace(/\\/g, '\\\\')
+    .replace(/`/g, '\\`')
+    .replace(/<<\}/g, '\\<<}')
+}
+
+// CriticMarkup highlight, with its comment when it has one:
+// {==text==}{>>comment<<}. See src/extensions/critic-markup/.
+turndownService.addRule('criticHighlight', {
+  filter: (node) => node.nodeName === 'MARK'
+    && (node.classList.contains('critic-comment') || node.classList.contains('critic-highlight')
+      || node.hasAttribute('data-comment')),
+  replacement: (content, node) => {
+    const comment = (node as HTMLElement).getAttribute('data-comment')
+    return `{==${content}==}` + (comment !== null ? `{>>${escapeCriticComment(comment)}<<}` : '')
+  },
+})
+
+// Standalone CriticMarkup comment: {>>comment<<}. Rendered with a 💬 text
+// child — Turndown drops text-less elements via its blank rule before any
+// custom rule is consulted.
+turndownService.addRule('criticComment', {
+  filter: (node) => node.nodeName === 'SPAN' && node.hasAttribute('data-critic-comment'),
+  replacement: (_content, node) =>
+    `{>>${escapeCriticComment((node as HTMLElement).getAttribute('data-critic-comment') ?? '')}<<}`,
+})
 
 // Headings: same ATX output as Turndown's default rule, but strip the
 // line-start escapes turndownEscape added — after the "### " prefix the line
@@ -388,6 +426,8 @@ export function wrapHtmlDocument(bodyHtml: string, title: string = 'Document'): 
   img { max-width: 100%; }
   a { color: #2563eb; }
   hr { border: none; border-top: 1px solid #ddd; margin: 2rem 0; }
+  mark.critic-comment { background: #fef3c7; border-bottom: 2px dotted #f59e0b; color: inherit; }
+  mark.critic-highlight { background: #fef08a; color: inherit; }
   ul[data-type="taskList"] { list-style: none; padding-left: 0; }
   ul[data-type="taskList"] li { display: flex; align-items: flex-start; gap: 0.5rem; }
   ul[data-type="taskList"] li input[type="checkbox"] { margin-top: 0.3em; }

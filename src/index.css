@@ -156,6 +156,36 @@ html {
   @apply max-w-full h-auto rounded-sm;
 }
 
+/* CriticMarkup review comments ({==text==}{>>comment<<}). A commented
+   highlight is amber with a dotted underline; a lone {==highlight==} is a
+   plain yellow highlight; a lone {>>comment<<} is a 💬 marker. */
+.ProseMirror mark.critic-comment {
+  @apply bg-amber-100 text-inherit rounded-xs border-b-2 border-dotted border-amber-500 cursor-help;
+}
+
+.ProseMirror mark.critic-highlight {
+  @apply bg-yellow-200 text-inherit rounded-xs;
+}
+
+.ProseMirror .critic-comment-marker {
+  @apply inline-block px-0.5 mx-px rounded-sm cursor-help select-none;
+  font-size: 0.85em;
+}
+
+/* Target of a comment being typed into the bubble (a decoration, not a mark:
+   focus is in the bubble, so ProseMirror isn't drawing the selection). */
+.ProseMirror .critic-pending {
+  @apply bg-amber-200 rounded-xs;
+}
+
+.ProseMirror .critic-pending-marker {
+  @apply opacity-60;
+}
+
+.ProseMirror .critic-comment-marker.ProseMirror-selectednode {
+  @apply outline-2 outline-blue-500;
+}
+
 /* Task list styles */
 .ProseMirror ul[data-type="taskList"] {
   @apply list-none ml-0 pl-0;
@@ -379,6 +409,18 @@ html {
 
 .dark .ProseMirror hr {
   @apply border-gray-600;
+}
+
+.dark .ProseMirror mark.critic-comment {
+  @apply bg-amber-900/60 border-amber-400;
+}
+
+.dark .ProseMirror .critic-pending {
+  @apply bg-amber-700/60;
+}
+
+.dark .ProseMirror mark.critic-highlight {
+  @apply bg-yellow-700/60;
 }
 
 .dark .ProseMirror s {

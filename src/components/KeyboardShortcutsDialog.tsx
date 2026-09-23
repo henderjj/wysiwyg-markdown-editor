@@ -32,6 +32,7 @@ const shortcutGroups: ShortcutGroup[] = [
       { keys: 'Ctrl+Shift+X', description: 'Strikethrough' },
       { keys: 'Ctrl+E', description: 'Code' },
       { keys: 'Ctrl+Shift+B', description: 'Blockquote' },
+      { keys: 'Ctrl+Shift+M', description: 'Add / edit review comment' },
     ],
   },
   {
@@ -49,6 +50,7 @@ const shortcutGroups: ShortcutGroup[] = [
       { keys: 'Ctrl+H', description: 'Find & Replace' },
       { keys: 'Ctrl+Tab', description: 'Next tab' },
       { keys: 'Ctrl+Shift+Tab', description: 'Previous tab' },
+      { keys: 'Ctrl+,', description: 'Preferences' },
       { keys: 'Ctrl+Shift+V', description: 'Paste as Markdown' },
       { keys: 'Ctrl+Z', description: 'Undo' },
       { keys: 'Ctrl+Y', description: 'Redo' },

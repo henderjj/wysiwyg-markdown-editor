@@ -37,6 +37,18 @@ fn force_exit(window: tauri::Window) {
     let _ = window.destroy();
 }
 
+/// The OS user's display name (e.g. "Joe Bloggs"), used as the default author
+/// of review comments. Falls back to the login name when no display name is set.
+#[tauri::command]
+fn get_user_real_name() -> String {
+    let real = whoami::realname();
+    if real.trim().is_empty() {
+        whoami::username()
+    } else {
+        real
+    }
+}
+
 fn main() {
     // Check CLI args for a .md/.markdown file path
     let cli_path = std::env::args().nth(1).and_then(|arg| {
@@ -79,7 +91,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             get_cli_file_path,
             set_unsaved_changes,
-            force_exit
+            force_exit,
+            get_user_real_name
         ])
         .setup(|app| {
             // Window starts hidden (visible: false in tauri.conf.json) so the

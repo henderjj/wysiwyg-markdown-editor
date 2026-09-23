@@ -1,4 +1,4 @@
-import { useEditor, EditorContent, Extension } from '@tiptap/react'
+import { useEditor, EditorContent, Extension, type Editor as TiptapEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import BulletList from '@tiptap/extension-bullet-list'
 import Link from '@tiptap/extension-link'
@@ -21,6 +21,16 @@ import { FloatingImageToolbar } from './FloatingImageToolbar'
 import { ImageDialog } from './ImageDialog'
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { SearchReplace } from '../../extensions/search-replace'
+import { posToDOMRect } from '@tiptap/core'
+import {
+  CriticHighlight, CriticComment, CriticMarkupUI,
+  getActiveComment, canAddComment, addComment, updateComment, deleteComment,
+  setPendingComment, commentFromDOM, commentDOM,
+} from '../../extensions/critic-markup/CriticMarkup'
+import type { ActiveComment } from '../../extensions/critic-markup/CriticMarkup'
+import { buildComment, replaceCommentBody } from '../../extensions/critic-markup/commentMeta'
+import type { CommentPrefixOptions } from '../../extensions/critic-markup/commentMeta'
+import { CommentBubble } from './CommentBubble'
 import { Mermaid } from '../../extensions/mermaid/Mermaid'
 import { MermaidViewerDialog } from '../../extensions/mermaid/MermaidViewerDialog'
 import { SearchBar } from './SearchBar'
@@ -37,7 +47,16 @@ interface EditorProps {
   onCloseSearchBar?: () => void
   zoom?: number
   initialShowReplace?: boolean
+  /** Author/timestamp prefix settings for new review comments */
+  commentSettings?: CommentPrefixOptions
 }
+
+const DEFAULT_COMMENT_SETTINGS: CommentPrefixOptions = { includeAuthor: true, includeTimestamp: true, author: '' }
+
+// A comment being typed into the bubble. `key` remounts the bubble per session.
+type CommentComposer =
+  | { mode: 'add'; from: number; to: number; key: number }
+  | { mode: 'edit'; active: ActiveComment; key: number }
 
 // Auto-join adjacent blockquote nodes after editing operations (lift/nest/delete)
 const JoinAdjacentBlockquotes = Extension.create({
@@ -292,9 +311,15 @@ const ClipboardMarkdown = Extension.create({
 })
 
 // Create extensions that disable input rules.
-// `onExpandDiagram` must be identity-stable: `extensions` is a useEditor
-// dependency, so a new function each render would recreate the whole editor.
-function createExtensions(markdownShortcuts: boolean, onExpandDiagram?: (source: string) => void) {
+// `onExpandDiagram` and the comment callbacks must be identity-stable:
+// `extensions` is a useEditor dependency, so a new function each render would
+// recreate the whole editor.
+function createExtensions(
+  markdownShortcuts: boolean,
+  onExpandDiagram?: (source: string) => void,
+  onRequestComment?: (editor: TiptapEditor) => void,
+  onHoverComment?: (element: HTMLElement | null) => void,
+) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const baseExtensions: any[] = [
     StarterKit.configure({
@@ -471,6 +496,12 @@ function createExtensions(markdownShortcuts: boolean, onExpandDiagram?: (source:
     }).configure({
       inline: true,
     }),
+    CriticHighlight,
+    CriticComment,
+    CriticMarkupUI.configure({
+      onRequestComment: onRequestComment ?? null,
+      onHoverComment: onHoverComment ?? null,
+    }),
     JoinAdjacentBlockquotes,
     ClipboardMarkdown,
     SearchReplace,
@@ -519,7 +550,7 @@ function createExtensions(markdownShortcuts: boolean, onExpandDiagram?: (source:
   return baseExtensions
 }
 
-export function Editor({ content = '', onUpdate, onEditorReady, markdownShortcuts = false, showSearchBar = false, onToggleFind, onCloseSearchBar, zoom = 100, initialShowReplace = false }: EditorProps) {
+export function Editor({ content = '', onUpdate, onEditorReady, markdownShortcuts = false, showSearchBar = false, onToggleFind, onCloseSearchBar, zoom = 100, initialShowReplace = false, commentSettings = DEFAULT_COMMENT_SETTINGS }: EditorProps) {
   const [showImageEditDialog, setShowImageEditDialog] = useState(false)
   const [editingImageAttrs, setEditingImageAttrs] = useState({ src: '', alt: '' })
   // Source of the diagram shown in the expanded viewer, or null when closed.
@@ -527,10 +558,49 @@ export function Editor({ content = '', onUpdate, onEditorReady, markdownShortcut
   // ProseMirror's contentEditable subtree and the `.ProseMirror` CSS scope.
   const [expandedDiagram, setExpandedDiagram] = useState<string | null>(null)
   const requestExpandDiagram = useCallback((source: string) => setExpandedDiagram(source), [])
+
+  // Review comments. The keyboard shortcut and hover plugin live inside the
+  // extension, which needs identity-stable callbacks — so the opener takes the
+  // editor as an argument instead of closing over it, and hover only sets state.
+  const [composer, setComposer] = useState<CommentComposer | null>(null)
+  // Hover: the last comment element the pointer entered, whether it is still
+  // over that text, and whether it has moved onto the bubble. The bubble hides
+  // after a short delay once the pointer is on neither, so it can be reached
+  // across the gap to click its buttons.
+  const [hoverEl, setHoverEl] = useState<HTMLElement | null>(null)
+  const [pointerOnComment, setPointerOnComment] = useState(false)
+  const [pointerOnBubble, setPointerOnBubble] = useState(false)
+  const [scrollEl, setScrollEl] = useState<HTMLDivElement | null>(null)
+
+  const openComposer = useCallback((ed: TiptapEditor) => {
+    const active = getActiveComment(ed.state)
+    if (active) {
+      setComposer({ mode: 'edit', active, key: Date.now() })
+    } else if (canAddComment(ed.state)) {
+      const { from, to } = ed.state.selection
+      setComposer({ mode: 'add', from, to, key: Date.now() })
+      setPendingComment(ed, { from, to })
+    }
+  }, [])
+
+  const handleHoverComment = useCallback((el: HTMLElement | null) => {
+    if (el) {
+      setHoverEl(el)
+      setPointerOnBubble(false)
+    }
+    setPointerOnComment(el !== null)
+  }, [])
+
+  useEffect(() => {
+    if (!hoverEl || pointerOnComment || pointerOnBubble) return
+    const id = window.setTimeout(() => setHoverEl(null), 300)
+    return () => window.clearTimeout(id)
+  }, [hoverEl, pointerOnComment, pointerOnBubble])
+
   // Build extensions based on markdownShortcuts setting
   const extensions = useMemo(
-    () => createExtensions(markdownShortcuts, requestExpandDiagram),
-    [markdownShortcuts, requestExpandDiagram]
+    () => createExtensions(markdownShortcuts, requestExpandDiagram, openComposer, handleHoverComment),
+    [markdownShortcuts, requestExpandDiagram, openComposer, handleHoverComment]
   )
 
   const editor = useEditor({
@@ -577,6 +647,105 @@ export function Editor({ content = '', onUpdate, onEditorReady, markdownShortcut
     editor.chain().focus().setImage({ src, alt }).run()
   }, [editor])
 
+  const requestComment = useCallback(() => {
+    if (editor) openComposer(editor)
+  }, [editor, openComposer])
+
+  const closeComposer = useCallback(() => {
+    setComposer(null)
+    if (editor) {
+      setPendingComment(editor, null)
+      editor.commands.focus()
+    }
+  }, [editor])
+
+  const handleComposerSubmit = useCallback((body: string) => {
+    if (!editor || !composer) return
+    setComposer(null)
+    if (composer.mode === 'add') {
+      setPendingComment(editor, null)
+      addComment(editor, buildComment(body, commentSettings), composer)
+    } else {
+      const { active } = composer
+      // A lone {==highlight==} has no comment yet: give it a fresh prefix.
+      // An existing comment keeps its original author/time prefix.
+      const next = active.comment === null
+        ? buildComment(body, commentSettings)
+        : replaceCommentBody(active.comment, body)
+      updateComment(editor, active, next)
+    }
+  }, [editor, composer, commentSettings])
+
+  // A doc update while composing means the document was replaced underneath
+  // (tab switch, reload): typing goes to the bubble's input, not the editor.
+  useEffect(() => {
+    if (!editor || !composer) return
+    const close = () => setComposer(null)
+    editor.on('update', close)
+    return () => { editor.off('update', close) }
+  }, [editor, composer])
+
+  // The add-mode anchor is the pending range itself. Memoized so the bubble's
+  // positioning effect doesn't restart on every render.
+  const composerRange = composer?.mode === 'add' ? composer : null
+  const addReference = useMemo(() => {
+    if (!editor || !composerRange) return null
+    return {
+      getBoundingClientRect: () => posToDOMRect(editor.view, composerRange.from, composerRange.to),
+      contextElement: editor.view.dom,
+    }
+  }, [editor, composerRange])
+
+  // Which bubble to show, in priority order: composing > mouse hover > caret
+  // (so comments are readable and editable without a mouse). Hover and caret
+  // anchor to the same comment element, so switching between them doesn't move
+  // the bubble. Derived during render: the editor re-renders on every
+  // transaction, including focus/blur.
+  let bubble: React.ReactNode = null
+  if (editor && composer) {
+    const reference = composer.mode === 'add' ? addReference : commentDOM(editor.view, composer.active)
+    if (reference) {
+      bubble = composer.mode === 'add'
+        ? <CommentBubble key={composer.key} mode="add" target={composer.from === composer.to ? 'cursor' : 'selection'}
+          reference={reference} boundary={scrollEl} onSubmit={handleComposerSubmit} onCancel={closeComposer} />
+        : <CommentBubble key={composer.key} mode="edit" comment={composer.active.comment}
+          reference={reference} boundary={scrollEl} onSubmit={handleComposerSubmit} onCancel={closeComposer} />
+    }
+  } else if (editor) {
+    let target: { el: HTMLElement; active: ActiveComment } | null = null
+    if (hoverEl?.isConnected) {
+      const active = commentFromDOM(editor.view, hoverEl)
+      if (active) target = { el: hoverEl, active }
+    }
+    if (!target && editor.isFocused) {
+      const active = getActiveComment(editor.state)
+      const el = active && commentDOM(editor.view, active)
+      if (active && el) target = { el, active }
+    }
+    if (target && target.active.comment !== null) {
+      const { active } = target
+      bubble = (
+        <CommentBubble
+          key="view"
+          mode="view"
+          comment={target.active.comment}
+          reference={target.el}
+          boundary={scrollEl}
+          onMouseEnter={() => setPointerOnBubble(true)}
+          onMouseLeave={() => setPointerOnBubble(false)}
+          onEdit={() => {
+            setHoverEl(null)
+            setComposer({ mode: 'edit', active, key: Date.now() })
+          }}
+          onDelete={() => {
+            setHoverEl(null)
+            deleteComment(editor, active)
+          }}
+        />
+      )
+    }
+  }
+
   // The user cannot type while the viewer holds focus, so any update while it is
   // open means the document was replaced underneath it (tab switch, reload from
   // disk). Close rather than keep showing a diagram that may no longer exist.
@@ -590,12 +759,12 @@ export function Editor({ content = '', onUpdate, onEditorReady, markdownShortcut
   return (
     <div className="border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 shadow-xs flex flex-col min-h-0 h-full overflow-hidden">
       <div className="shrink-0 z-20 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 rounded-t-lg">
-        <MenuBar editor={editor} showSearchBar={showSearchBar} onToggleFind={onToggleFind} />
+        <MenuBar editor={editor} showSearchBar={showSearchBar} onToggleFind={onToggleFind} onRequestComment={requestComment} />
         {showSearchBar && editor && onCloseSearchBar && (
           <SearchBar editor={editor} onClose={onCloseSearchBar} initialShowReplace={initialShowReplace} />
         )}
       </div>
-      <div className="flex-1 min-h-0 overflow-y-auto relative">
+      <div ref={setScrollEl} className="flex-1 min-h-0 overflow-y-auto relative">
         <EditorContent editor={editor} className="min-h-[300px]" style={{ fontSize: `${zoom}%` }} />
         {editor && <FloatingTableToolbar editor={editor} />}
         {editor && <FloatingImageToolbar editor={editor} onEditImage={handleEditImage} />}
@@ -613,6 +782,7 @@ export function Editor({ content = '', onUpdate, onEditorReady, markdownShortcut
         onClose={() => setExpandedDiagram(null)}
         onFallbackFocus={() => editor?.commands.focus()}
       />
+      {bubble}
     </div>
   )
 }
