@@ -4,6 +4,47 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0]
+
+### Added
+
+- **Review comments, stored as [CriticMarkup](https://github.com/CriticMarkup/CriticMarkup-toolkit)** (#48, #50). A comment on selected text is saved as `{==text==}{>>comment<<}`, and a comment added with nothing selected as a lone `{>>comment<<}` shown as a 💬 marker. A lone `{==highlight==}` from another CriticMarkup tool is displayed and saved back unchanged, but the UI never creates one — highlighting without a comment was out of scope for the issue, as were additions, deletions, substitutions and a comments side panel. Comments stay readable in any text editor and in the markdown preview. In the editor they are a `criticHighlight` mark and a `criticComment` inline atom node (`src/extensions/critic-markup/`).
+- **A comment bubble for reading, adding and editing comments.** It appears on hover, or when the caret is inside a comment, so comments can be read without a mouse. It has ✎ edit and 🗑 delete buttons, and new comments are typed straight into it, in a wrapping, auto-growing text area. Enter saves, Esc cancels, and line breaks aren't accepted because CriticMarkup advises against newlines inside its tags; a hint under the box says so. Also available through `Ctrl+Shift+M` and toolbar buttons. The Add button's tooltip explains why it is disabled when it is — the selection spans blocks, is in code, overlaps an existing comment, and so on — computed by the same function that disables it, so the two can't drift apart.
+- **Optional author and timestamp prefix** — `[Joe Bloggs 2026-09-21 14:00]: comment`. It is written only when a comment is created, and editing keeps it exactly as written. Any other metadata format in a file is shown as plain comment text. The author defaults to the OS display name in the desktop app, through a new `get_user_real_name` Tauri command using the `whoami` crate; the web build has no OS name, so it uses the override or no author.
+- **An Options › Preferences dialog** (`Ctrl+,`), holding the comment settings: include author, include timestamp, and an author-name override. Moving the existing Options-menu toggles into it is left for later.
+
+### Changed
+
+- `Ctrl+M` (toggle preview) now ignores Shift, so `Ctrl+Shift+M` reaches the editor. `Ctrl+Alt+M`, the Word/Google Docs convention, was avoided because it is AltGr+M on German and other layouts, which types characters such as µ.
+- CriticMarkup typed as literal text is saved backslash-escaped, `{` before `==`/`>>` and `=` before `=}`, so it can't turn into a comment on reload. Backticks and backslashes inside a comment written by another tool are escaped the first time the file is saved, and are stable after that.
+- Added `@floating-ui/dom` as a direct dependency. It was already installed as a TipTap dependency.
+
+### Implementation notes
+
+These are recorded because each one broke silently during development, with build, tests and lint green. They are documented in more detail in `CLAUDE.md`.
+
+- The comment mark has `priority: 1100`, above Link's 1000, so it is always the outermost mark. Otherwise a comment spanning bold or link text serializes as several `<mark>` elements and exports as several comments.
+- The 💬 node renders a literal text child. Turndown's blank rule drops elements with no text *before* any custom rule is consulted, which would silently lose the comment on save.
+- Comment bodies are plain text in an HTML attribute, so `turndownEscape` never sees them. `escapeCriticComment()` escapes `\`, `` ` `` and `<<}` itself. Escaping the backtick matters: a code span forming inside a body made its backslashes double on every round-trip.
+- The bubble is positioned against the comment's DOM element, never a rect snapshot. An early version positioned hover and caret popups from different rects, which made the bubble jump between them and detach when the text scrolled. The bubble is also `visibility: hidden` until its first position is computed, and a hidden input silently refuses focus, so `autoFocus` did nothing; the text area is focused once the bubble is placed.
+
+### Dependencies
+
+- Merged 1 Dependabot update since v1.8.5:
+  - Bump the development-minor-patch group with 3 updates (#49): `eslint-plugin-react-refresh` 0.5.6 → 0.5.7, `jsdom` 30.0.1 → 30.1.0, `vitest` 5.0.0 → 5.0.1
+
+### Verification
+
+`npm test` passes 240 tests, including a new `CriticMarkup` suite. It covers import, byte-stable round-trips, escaping, comments in tables, headings, lists and blockquotes, and metadata parsing. `npm run lint`, `npm run build` and `cargo check` are clean. Checked by hand in a browser and in the Tauri desktop app on Windows, since none of the UI is observable to CI:
+
+- adding, editing and deleting comments, including cancelling by clicking away
+- hover and caret bubbles anchoring identically
+- flipping near the bottom of the pane and hiding once the text scrolls out of view
+- a very long comment scrolling inside the bubble
+- the Preferences prefix and detection of the OS name
+- light and dark themes
+- the disabled-button tooltips
+
 ## [1.8.5]
 
 ### Changed
