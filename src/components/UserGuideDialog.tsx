@@ -209,10 +209,6 @@ export function UserGuideDialog({ isOpen, onClose }: UserGuideDialogProps) {
               <li><strong>Export as HTML</strong> — <strong>File &gt; Export as HTML</strong> saves
                 the document as a styled <code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded-sm">.html</code> file.</li>
             </ul>
-            <p>
-              Both "Copy as Markdown" and "Copy as HTML" are also available in the right-click context menu
-              when text is selected.
-            </p>
           </Section>
 
           <Section title="Markdown Preview">

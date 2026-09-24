@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **When work is complete and ready to commit, check whether the app version needs incrementing** (new feature → minor, bug fix → patch). The version is recorded in five places that must stay in sync: `package.json`, `package-lock.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`, and the `wysiwyg-markdown` entry in `src-tauri/Cargo.lock` (do not touch other crates' version lines). Do not edit them by hand — run `node scripts/bump-version.mjs <patch|minor|major|x.y.z>`, which edits all five with anchored replacements and then verifies that all five actually agree before exiting. Include the new version in the commit message title, e.g. `(v1.4.1)`. Skip the bump only for changes with no shipped-behavior impact (docs-only, test-only, tooling).
 
+**Keep PR descriptions limited to the code changes in the PR.** Describe what the diff changes. Leave out background reasoning, rejected alternatives, follow-up ideas and "not in this PR" notes.
+
 ## Build & Dev Commands
 
 ```bash
@@ -119,7 +121,9 @@ Helper utilities in `markdown.ts`:
 - `wrapHtmlDocument(html, title)` — wraps editor HTML in a standalone styled HTML document
 - `exportHtmlFile(html, filename)` — saves HTML via Tauri dialog / File System Access API / browser download
 
-The Edit menu has "Copy as Markdown" (selection-aware, falls back to full doc), "Copy as HTML", and "Copy as Plain Text" (Ctrl+Shift+C, strips all formatting). The File menu has "Export as HTML..." which produces a styled `.html` file. All copy options also appear in the right-click context menu when text is selected.
+The Edit menu has "Copy as Markdown" (selection-aware, falls back to full doc), "Copy as HTML", and "Copy as Plain Text" (Ctrl+Shift+C, strips all formatting). The File menu has "Export as HTML..." which produces a styled `.html` file. These are not on the right-click menu.
+
+**The editor deliberately has no custom right-click menu.** It uses the webview's native one because that is the only place spelling suggestions can come from. No web API exposes them, and a Tauri native menu (`@tauri-apps/api/menu`) replaces the webview menu just as a custom one does. An unused custom `ContextMenu.tsx` (cut/copy/paste, copy-as, formatting, link and image items) was never rendered and was deleted after v1.9.1. Anything that seems to need a context menu belongs in the menu bar, the toolbar or a shortcut instead.
 
 ### Printing
 
