@@ -5,14 +5,16 @@ import Link from '@tiptap/extension-link'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import Placeholder from '@tiptap/extension-placeholder'
-import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import { CodeBlockWithCopy } from '../../extensions/code-block'
 import { Table, TableRow, TableCell, TableHeader } from '@tiptap/extension-table'
 import Image from '@tiptap/extension-image'
 import Typography from '@tiptap/extension-typography'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
+import type { EditorView } from '@tiptap/pm/view'
 import { DOMSerializer } from '@tiptap/pm/model'
 import { canJoin } from '@tiptap/pm/transform'
 import { htmlToMarkdown } from '../../lib/markdown'
+import { codeSelectionText } from '../../lib/codeCopy'
 import { ESCAPABLE_PUNCTUATION } from '../../lib/markdownParser'
 import { internalLinkFragment, navigateToHeading } from '../../lib/headingAnchors'
 import { openExternalUrl } from '../../lib/tauri'
@@ -268,7 +270,32 @@ const MarkdownEscape = Extension.create({
   },
 })
 
-// Put markdown as plain text on the clipboard when copying/cutting
+// Fill the clipboard for a copy/cut of the current selection: markdown as plain
+// text alongside the HTML, except for a selection wholly inside a code block or
+// inline code span, which is copied as its raw text alone (codeSelectionText).
+// Leaving out text/html there means pasting a copied command into a paragraph
+// here inserts text rather than a new code block.
+function writeSelectionToClipboard(view: EditorView, event: ClipboardEvent): boolean {
+  if (view.state.selection.empty || !event.clipboardData) return false
+  event.preventDefault()
+  event.clipboardData.clearData()
+
+  const codeText = codeSelectionText(view.state)
+  if (codeText !== null) {
+    event.clipboardData.setData('text/plain', codeText)
+    return true
+  }
+
+  const slice = view.state.selection.content()
+  const serializer = DOMSerializer.fromSchema(view.state.schema)
+  const div = document.createElement('div')
+  div.appendChild(serializer.serializeFragment(slice.content))
+  const html = div.innerHTML
+  event.clipboardData.setData('text/html', html)
+  event.clipboardData.setData('text/plain', htmlToMarkdown(html))
+  return true
+}
+
 const ClipboardMarkdown = Extension.create({
   name: 'clipboardMarkdown',
   addProseMirrorPlugins() {
@@ -278,31 +305,10 @@ const ClipboardMarkdown = Extension.create({
         props: {
           handleDOMEvents: {
             copy(view, event) {
-              if (view.state.selection.empty) return false
-              const slice = view.state.selection.content()
-              const serializer = DOMSerializer.fromSchema(view.state.schema)
-              const div = document.createElement('div')
-              div.appendChild(serializer.serializeFragment(slice.content))
-              const html = div.innerHTML
-              const markdown = htmlToMarkdown(html)
-              event.preventDefault()
-              event.clipboardData!.clearData()
-              event.clipboardData!.setData('text/html', html)
-              event.clipboardData!.setData('text/plain', markdown)
-              return true
+              return writeSelectionToClipboard(view, event)
             },
             cut(view, event) {
-              if (view.state.selection.empty) return false
-              const slice = view.state.selection.content()
-              const serializer = DOMSerializer.fromSchema(view.state.schema)
-              const div = document.createElement('div')
-              div.appendChild(serializer.serializeFragment(slice.content))
-              const html = div.innerHTML
-              const markdown = htmlToMarkdown(html)
-              event.preventDefault()
-              event.clipboardData!.clearData()
-              event.clipboardData!.setData('text/html', html)
-              event.clipboardData!.setData('text/plain', markdown)
+              if (!writeSelectionToClipboard(view, event)) return false
               view.dispatch(view.state.tr.deleteSelection().scrollIntoView())
               return true
             },
@@ -369,7 +375,7 @@ function createExtensions(
   const baseExtensions: any[] = [
     StarterKit.configure({
       bulletList: false, // We use a custom BulletList with data-marker support
-      codeBlock: false, // We use CodeBlockLowlight instead
+      codeBlock: false, // We use CodeBlockLowlight (with a copy button) instead
       code: {
         HTMLAttributes: { spellcheck: 'false' },
       },
@@ -421,7 +427,7 @@ function createExtensions(
     Placeholder.configure({
       placeholder: 'Start writing...',
     }),
-    CodeBlockLowlight.configure({
+    CodeBlockWithCopy.configure({
       lowlight,
       defaultLanguage: 'plaintext',
       HTMLAttributes: { spellcheck: 'false' },

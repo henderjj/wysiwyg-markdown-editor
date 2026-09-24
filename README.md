@@ -13,7 +13,7 @@ Users interact with a familiar rich-text interface while the application maintai
 - **Headings** — H1–H6 with toolbar buttons and dropdown menu
 - **Lists** — ordered, unordered (with dash/star/plus markers), and task lists with nesting
 - **Tables** — visual grid picker or manual size input, with add/delete rows and columns, merge/split cells, toggle header row, and resize handles
-- **Code blocks** — fenced blocks with syntax highlighting (highlight.js) and 40+ language options
+- **Code blocks** — fenced blocks with syntax highlighting (highlight.js) and 40+ language options, plus a hover **Copy** button for the raw contents
 - **Mermaid diagrams** — ` ```mermaid ` blocks render as diagrams (read-only) with a per-block toggle to edit the raw source and re-render, plus an expanded viewer (**⤢ Expand** / `Alt+Enter`) with mouse-wheel zoom and click-drag pan
 - **Links** — a link dialog for inserting, editing and removing links, with a picker for linking to a heading in the same document; the 🔗 button edits the link under the cursor
 - **Images** — insert and edit via a dialog, with a floating toolbar when selected (images display in-editor from `http(s)://` URLs; see [Known Limitations](#known-limitations))
@@ -38,6 +38,7 @@ Users interact with a familiar rich-text interface while the application maintai
 
 ### File Management
 - **Open / Save / Save As** — `.md` files via native file pickers
+- **Smart copy** (Ctrl+C) — copies formatted text plus markdown; a selection inside a code block or inline code copies as the raw code, without fences or backticks
 - **Copy as Markdown** — export editor content to clipboard as Markdown
 - **Copy as HTML** — export editor content to clipboard as raw HTML
 - **Copy as Plain Text** (Ctrl+Shift+C) — export content stripped of all formatting

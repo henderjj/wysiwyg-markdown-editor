@@ -166,6 +166,10 @@ export function UserGuideDialog({ isOpen, onClose }: UserGuideDialogProps) {
               Inside a code block, <Kbd>Tab</Kbd> inserts 2 spaces
               and <Kbd>Shift+Tab</Kbd> removes up to 2 leading spaces.
             </p>
+            <p>
+              Hover over a code block and click <strong>Copy</strong> in its top-right corner to copy
+              the whole block&apos;s contents, without the markdown fence.
+            </p>
           </Section>
 
           <Section title="Blockquotes">
@@ -202,6 +206,8 @@ export function UserGuideDialog({ isOpen, onClose }: UserGuideDialogProps) {
               When you copy text from the editor (<Kbd>Ctrl+C</Kbd>), the clipboard contains both
               the formatted HTML and the markdown equivalent. Pasting into a rich editor (Word, Google Docs)
               gives you formatted text; pasting into a plain text editor gives you markdown.
+              A selection that lies entirely inside a code block or inline code span copies as just the
+              code, without fences or backticks, so it can be pasted straight into a terminal.
             </p>
             <ul className="list-disc list-inside space-y-1 ml-2">
               <li><strong>Copy as Markdown</strong> — <strong>Edit &gt; Copy as Markdown</strong> copies
