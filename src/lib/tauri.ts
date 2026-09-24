@@ -3,6 +3,8 @@
  * Provides native file operations when running as a desktop app
  */
 
+import { openableUrl } from './linkEditing'
+
 // Check if running in Tauri
 export const isTauri = (): boolean => {
   return '__TAURI__' in window || '__TAURI_INTERNALS__' in window
@@ -92,27 +94,21 @@ export async function getCliFilePath(): Promise<string | null> {
 
 /**
  * Open an external URL in the system browser (desktop) or a new tab (web).
- * Only http(s), mailto and tel are opened — the same set the shell plugin's
- * default `open` scope allows — so a `javascript:` or relative href is ignored.
+ * Hrefs `openableUrl()` refuses (`javascript:`, relative, …) are ignored.
  */
 export async function openExternalUrl(href: string): Promise<void> {
-  let url: URL
-  try {
-    url = new URL(href)
-  } catch {
-    return
-  }
-  if (!['http:', 'https:', 'mailto:', 'tel:'].includes(url.protocol)) return
+  const url = openableUrl(href)
+  if (!url) return
   if (isTauri()) {
     try {
       const { open } = await import('@tauri-apps/plugin-shell')
-      await open(url.href)
+      await open(url)
     } catch (error) {
       console.error('Failed to open link:', error)
     }
     return
   }
-  window.open(url.href, '_blank', 'noopener,noreferrer')
+  window.open(url, '_blank', 'noopener,noreferrer')
 }
 
 /** The OS user's display name, or null in the browser build or on failure. */

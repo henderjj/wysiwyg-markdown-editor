@@ -16,6 +16,7 @@ import { htmlToMarkdown } from '../../lib/markdown'
 import { ESCAPABLE_PUNCTUATION } from '../../lib/markdownParser'
 import { internalLinkFragment, navigateToHeading } from '../../lib/headingAnchors'
 import { openExternalUrl } from '../../lib/tauri'
+import { linkTooltipDecorations } from '../../lib/linkEditing'
 import { common, createLowlight } from 'lowlight'
 import { MenuBar } from './MenuBar'
 import { FloatingTableToolbar } from './FloatingTableToolbar'
@@ -313,7 +314,8 @@ const ClipboardMarkdown = Extension.create({
 })
 
 // Links are followed with Ctrl+Click (Cmd+Click on macOS); a plain click only
-// places the caret, so link text can be edited like any other text.
+// places the caret, so link text can be edited like any other text. A hover
+// tooltip on every link says so (a view-only decoration; see linkEditing.ts).
 // Every link click is handled here and never propagates: Link renders anchors
 // with `target="_blank"`, and in the Tauri build the shell plugin's click
 // listener on <body> would otherwise open any `_blank` http(s) link on a plain
@@ -325,7 +327,14 @@ const LinkNavigation = Extension.create({
     return [
       new Plugin({
         key: new PluginKey('linkNavigation'),
+        state: {
+          init: (_, state) => linkTooltipDecorations(state.doc),
+          apply: (tr, decorations) => tr.docChanged ? linkTooltipDecorations(tr.doc) : decorations,
+        },
         props: {
+          decorations(state) {
+            return this.getState(state)
+          },
           handleDOMEvents: {
             click(view, event) {
               const anchor = event.target instanceof Element ? event.target.closest('a') : null

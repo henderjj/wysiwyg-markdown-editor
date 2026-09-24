@@ -132,11 +132,19 @@ Press `Tab` to indent a list item (make it a sub-item) and `Shift+Tab` to outden
 
 ### Links
 
-Click the **link button** (🔗) on the toolbar. You'll be prompted for a URL and optional display text. If you select text first, it becomes the link text.
+Click the **link button** (🔗) on the toolbar to open the link dialog. Fill in:
 
-To remove a link, click on it and then click the **✕** button that appears on the toolbar.
+- **Text to display** — the words shown in the document. If you selected text first, it's filled in for you. Leave it empty to show the URL itself.
+- **URL** — a web address such as `https://example.com`, or `#heading-name` for a heading in this document.
+- **Or link to a heading in this document** — pick a heading from the list and its `#` address is filled in for you, along with its text if the display text is empty.
 
-**Following a link.** Hold `Ctrl` (`Cmd` on macOS) and click a link to follow it. A plain click just puts the cursor in the link text, so you can edit it like any other text. Web links open in your browser.
+Press `Enter` or click **Insert Link** to finish, or `Esc` to cancel.
+
+**Editing a link.** Click anywhere inside a link, then click the link button. It's highlighted when the cursor is in a link, and the dialog opens as **Edit Link** with the link's text and URL filled in. Change either one and click **Update Link**. If you only change the URL, any bold or other formatting inside the link is kept. If your selection spans several paragraphs or includes an image or comment, only the URL can be set.
+
+**Removing a link.** Click **Remove Link** in the Edit Link dialog, or click inside the link and then the **✕** button on the toolbar. The text stays; only the link is removed.
+
+**Following a link.** Hold `Ctrl` (`Cmd` on macOS) and click a link to follow it. A plain click just puts the cursor in the link text, so you can edit it like any other text. Web links open in your browser. Hover over a link to see its URL and a reminder of how to follow it.
 
 **Links within the document.** A link whose URL starts with `#` points at a heading in the same document — handy for a table of contents. Ctrl+Click jumps to that heading. The part after `#` is the heading text as GitHub writes it: lowercase, punctuation removed, spaces turned into hyphens. For example, `[Setup](#1-getting-started)` jumps to the heading `1. Getting Started`. If two headings have the same text, the second is `#name-1`, the third `#name-2`, and so on.
 
