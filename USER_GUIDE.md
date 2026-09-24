@@ -136,7 +136,9 @@ Click the **link button** (🔗) on the toolbar. You'll be prompted for a URL an
 
 To remove a link, click on it and then click the **✕** button that appears on the toolbar.
 
-A floating toolbar appears when you click a link, letting you open, edit, or remove it.
+**Following a link.** Hold `Ctrl` (`Cmd` on macOS) and click a link to follow it. A plain click just puts the cursor in the link text, so you can edit it like any other text. Web links open in your browser.
+
+**Links within the document.** A link whose URL starts with `#` points at a heading in the same document — handy for a table of contents. Ctrl+Click jumps to that heading. The part after `#` is the heading text as GitHub writes it: lowercase, punctuation removed, spaces turned into hyphens. For example, `[Setup](#1-getting-started)` jumps to the heading `1. Getting Started`. If two headings have the same text, the second is `#name-1`, the third `#name-2`, and so on.
 
 ### Images
 
@@ -441,6 +443,7 @@ Press `F1` or open **Help > Keyboard Shortcuts** for a quick-reference dialog. H
 |---|---|
 | `Ctrl+Tab` | Next tab |
 | `Ctrl+Shift+Tab` | Previous tab |
+| `Ctrl+Click` | Follow link (jump to heading, or open in browser) |
 
 ### View
 

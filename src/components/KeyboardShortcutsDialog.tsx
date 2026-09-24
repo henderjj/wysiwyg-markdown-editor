@@ -50,6 +50,7 @@ const shortcutGroups: ShortcutGroup[] = [
       { keys: 'Ctrl+H', description: 'Find & Replace' },
       { keys: 'Ctrl+Tab', description: 'Next tab' },
       { keys: 'Ctrl+Shift+Tab', description: 'Previous tab' },
+      { keys: 'Ctrl+Click', description: 'Follow link' },
       { keys: 'Ctrl+,', description: 'Preferences' },
       { keys: 'Ctrl+Shift+V', description: 'Paste as Markdown' },
       { keys: 'Ctrl+Z', description: 'Undo' },

@@ -127,7 +127,9 @@ export function UserGuideDialog({ isOpen, onClose }: UserGuideDialogProps) {
           <Section title="Links and Images">
             <p>
               <strong>Links</strong> — Click the link button (🔗), enter a URL and optional display text.
-              Select text first to turn it into a link. A floating toolbar appears when you click a link.
+              Select text first to turn it into a link. <strong>Ctrl+Click</strong> a link to follow it;
+              a plain click lets you edit the link text. A link to <code>#heading-name</code> (lowercase,
+              punctuation removed, spaces as hyphens) jumps to that heading in the document.
             </p>
             <p>
               <strong>Images</strong> — Click <strong>IMG</strong> to insert an image by URL with alt text.

@@ -90,6 +90,31 @@ export async function getCliFilePath(): Promise<string | null> {
   }
 }
 
+/**
+ * Open an external URL in the system browser (desktop) or a new tab (web).
+ * Only http(s), mailto and tel are opened — the same set the shell plugin's
+ * default `open` scope allows — so a `javascript:` or relative href is ignored.
+ */
+export async function openExternalUrl(href: string): Promise<void> {
+  let url: URL
+  try {
+    url = new URL(href)
+  } catch {
+    return
+  }
+  if (!['http:', 'https:', 'mailto:', 'tel:'].includes(url.protocol)) return
+  if (isTauri()) {
+    try {
+      const { open } = await import('@tauri-apps/plugin-shell')
+      await open(url.href)
+    } catch (error) {
+      console.error('Failed to open link:', error)
+    }
+    return
+  }
+  window.open(url.href, '_blank', 'noopener,noreferrer')
+}
+
 /** The OS user's display name, or null in the browser build or on failure. */
 export async function getUserRealName(): Promise<string | null> {
   if (!isTauri()) return null
