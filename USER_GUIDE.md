@@ -205,6 +205,12 @@ When your cursor is in a code block, click the code block button again to open a
 
 Inside a code block, `Tab` inserts two spaces and `Shift+Tab` removes up to two leading spaces. This is different from the normal Tab behavior, which moves browser focus.
 
+### Copying Code
+
+Hover over a code block and click the **Copy** button in its top-right corner to copy the whole block's contents, ready to paste into a terminal or another editor. The button shows **Copied** for a moment when it works. It also appears when you reach it with `Tab`.
+
+You can also select part of a code block, or part of an `inline code` span, and press `Ctrl+C` — see [Copy Options](#copy-options).
+
 ---
 
 ## Mermaid Diagrams
@@ -521,6 +527,8 @@ The editor is designed to be usable with a keyboard alone:
 ---
 
 ## Copy Options
+
+When you press `Ctrl+C`, the clipboard gets both formatted text (for Word, Google Docs, email) and markdown (for plain-text editors), so a copied heading pastes as `# Heading` into a text file. The exception is a selection that lies entirely inside one code block or one inline code span: that copies just the code, without the ` ``` ` fence or backticks, so a command can go straight into a terminal. A selection that reaches outside the code copies as markdown as usual, fences included.
 
 - **Copy as Markdown** — Copies the document (or selection) as raw markdown text, ready to paste into any text field or editor.
 - **Copy as HTML** — Copies the raw HTML markup of the document or selection.

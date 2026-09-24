@@ -139,6 +139,23 @@ html {
   font-size: inherit;
 }
 
+/* Code block node view (extensions/code-block.ts): a wrapper holding the
+   <pre> and its hover Copy button. The <pre>'s margins collapse through the
+   wrapper, so the button's offsets are measured from the <pre>'s own corner. */
+.ProseMirror .code-block {
+  @apply relative;
+}
+
+/* focus-within so a keyboard user tabbing onto the button can see it. */
+.ProseMirror .code-block-copy {
+  @apply absolute top-2 right-2 z-10 px-2 py-1 text-xs font-medium font-sans rounded-sm border border-gray-600 bg-gray-800 text-gray-200 hover:bg-gray-700 cursor-pointer shadow-xs opacity-0 transition-opacity select-none;
+}
+
+.ProseMirror .code-block:hover .code-block-copy,
+.ProseMirror .code-block-copy:focus-visible {
+  @apply opacity-100;
+}
+
 .ProseMirror a {
   @apply text-blue-600 underline hover:text-blue-800 cursor-pointer relative;
 }

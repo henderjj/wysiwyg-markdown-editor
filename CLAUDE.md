@@ -116,7 +116,7 @@ Relative and local image paths are **not resolved** against the open document's 
 
 ### Clipboard & Export
 
-The `ClipboardMarkdown` extension in `Editor.tsx` intercepts native `copy` and `cut` events. It serializes the ProseMirror selection to HTML via `DOMSerializer`, converts it to markdown via `htmlToMarkdown()`, and places both on the clipboard (`text/html` for rich targets, `text/plain` as markdown for plain text editors).
+The `ClipboardMarkdown` extension in `Editor.tsx` intercepts native `copy` and `cut` events. It serializes the ProseMirror selection to HTML via `DOMSerializer`, converts it to markdown via `htmlToMarkdown()`, and places both on the clipboard (`text/html` for rich targets, `text/plain` as markdown for plain text editors). The exception is a selection wholly inside one code block (any `code: true` node, so Mermaid source too) or one inline code span — `codeSelectionText()` in `src/lib/codeCopy.ts` — which is copied as raw `text/plain` only, with no fence or backticks. `text/html` is deliberately omitted there: `<pre><code>` on the clipboard would make pasting a copied command into a paragraph create a new code block. Code blocks also get a hover **Copy** button from the plain-DOM node view in `src/extensions/code-block.ts` (`CodeBlockWithCopy`, which replaces `CodeBlockLowlight`); `renderHTML` is untouched, so the button never reaches `getHTML()` or saved markdown. The button writes via `writeClipboardText()`; the Claude browser pane denies `clipboard-write`, so it shows "Copy failed" there — that is the environment, not the code.
 
 Helper utilities in `markdown.ts`:
 - `getSelectedHtml(editor)` — returns the HTML of the current selection (or `null` if empty)
