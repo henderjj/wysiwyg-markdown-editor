@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - **A link dialog** replaces the two browser prompts the 🔗 button used to show. It has fields for the display text and the URL, and a list of the document's headings: picking one fills in its `#slug` (and the display text, if empty), so table-of-contents links no longer need slugs typed by hand. `Enter` saves and `Esc` cancels. A `javascript:` or similar URL is rejected in the dialog rather than silently dropped.
 - **The 🔗 button edits the link under the cursor.** With the caret or selection inside a link, the dialog opens as Edit Link with its text and URL filled in, and has a Remove Link button. Changing only the URL keeps any formatting inside the link. When the selection spans several paragraphs or contains an image or comment, only the URL can be set, because replacing the text would delete them.
-- **A hover tooltip on links** shows the URL and how to follow it: "Ctrl+Click to open link" or "Ctrl+Click to go to heading" (Cmd on macOS). Links that Ctrl+Click can't open, such as relative file paths, show just the URL.
+- **The link hover tooltip says how to follow the link.** The existing tooltip, which showed only the URL, now adds "Ctrl+Click to open link" or "Ctrl+Click to go to heading" (Cmd on macOS) on a second line. Links that Ctrl+Click can't open, such as relative file paths, still show just the URL.
 
 ### Changed
 
@@ -19,7 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Implementation notes
 
-- The tooltip is an inline decoration held in `LinkNavigation`'s plugin state, not a `title` in the Link mark's HTML attributes. Decorations exist only in the editor view, so the title never reaches `getHTML()`; as an HTML attribute, Turndown would have exported it into every saved link as `[text](url "title")`.
+- The tooltip text comes from an inline decoration held in `LinkNavigation`'s plugin state, which sets a `data-link-tip` attribute that the tooltip's CSS rule displays. Decorations exist only in the editor view, so the text never reaches `getHTML()` or the saved file.
 - Edit mode uses `isMarkActive`, the same test that highlights the button, so the button edits exactly when it looks active. Link isn't inclusive, so a caret just past a link's end inserts a new link rather than editing that one.
 
 ### Verification

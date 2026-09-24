@@ -191,16 +191,17 @@ describe('linkTooltip', () => {
 })
 
 describe('linkTooltipDecorations', () => {
-  it('titles every link in the view without changing the saved HTML', () => {
+  it('tags every link in the view without changing the saved HTML', () => {
     const e = makeEditor('[one](https://example.com) and [two **bold**](#two)')
     const html = e.getHTML()
     const decorations = linkTooltipDecorations(e.state.doc).find()
     expect(decorations).toHaveLength(3)
-    expect(decorations.map(d => (d as unknown as { type: { attrs: { title: string } } }).type.attrs.title)).toEqual([
+    expect(decorations.map(d => (d as unknown as { type: { attrs: Record<string, string> } }).type.attrs['data-link-tip'])).toEqual([
       linkTooltip('https://example.com'),
       linkTooltip('#two'),
       linkTooltip('#two'),
     ])
+    expect(html).not.toContain('data-link-tip')
     expect(html).not.toContain('title=')
   })
 })

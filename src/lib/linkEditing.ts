@@ -152,10 +152,11 @@ export function linkTooltip(href: string, mac = isMacOS()): string {
 }
 
 /**
- * Inline decorations giving every link a `title` tooltip. Decorations exist
- * only in the editor's view, so the title never reaches `getHTML()` — a
- * `title` in the Link mark's HTML attributes would be exported by Turndown
- * as `[text](url "title")`.
+ * Inline decorations putting each link's tooltip text in a `data-link-tip`
+ * attribute, which the `[data-link-tip]:hover::after` rule in index.css
+ * displays. Not a `title`: that would add the browser's native tooltip on top
+ * of the styled one. Decorations exist only in the editor's view, so the
+ * attribute never reaches `getHTML()` or the saved markdown.
  */
 export function linkTooltipDecorations(doc: PMNode): DecorationSet {
   const decorations: Decoration[] = []
@@ -163,7 +164,7 @@ export function linkTooltipDecorations(doc: PMNode): DecorationSet {
     if (!node.isText) return true
     const link = node.marks.find(m => m.type.name === 'link')
     const href = link?.attrs.href as string | undefined
-    if (href) decorations.push(Decoration.inline(pos, pos + node.nodeSize, { title: linkTooltip(href) }))
+    if (href) decorations.push(Decoration.inline(pos, pos + node.nodeSize, { 'data-link-tip': linkTooltip(href) }))
     return false
   })
   return DecorationSet.create(doc, decorations)
