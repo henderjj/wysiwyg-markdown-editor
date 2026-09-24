@@ -518,7 +518,7 @@ The editor is designed to be usable with a keyboard alone:
 - **Copy as HTML** — Copies the raw HTML markup of the document or selection.
 - **Copy as Plain Text** (`Ctrl+Shift+C`) — Copies the document or selection as plain text with all formatting stripped.
 
-All three options are available in the **Edit** menu and in the right-click context menu when text is selected. If text is selected, only the selection is copied; otherwise the entire document is copied.
+All three options are available in the **Edit** menu. If text is selected, only the selection is copied; otherwise the entire document is copied.
 
 ---
 
