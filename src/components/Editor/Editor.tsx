@@ -14,6 +14,7 @@ import { DOMSerializer } from '@tiptap/pm/model'
 import { canJoin } from '@tiptap/pm/transform'
 import { htmlToMarkdown } from '../../lib/markdown'
 import { ESCAPABLE_PUNCTUATION } from '../../lib/markdownParser'
+import { internalLinkFragment, navigateToHeading } from '../../lib/headingAnchors'
 import { common, createLowlight } from 'lowlight'
 import { MenuBar } from './MenuBar'
 import { FloatingTableToolbar } from './FloatingTableToolbar'
@@ -310,6 +311,40 @@ const ClipboardMarkdown = Extension.create({
   },
 })
 
+// Clicking an in-document link (`#section`) jumps to that heading.
+// Link renders every anchor with `target="_blank"`, and in the Tauri build the
+// shell plugin's click listener on <body> sends any `_blank` http(s) link to
+// the system browser — a bare `#frag` resolves to `http://tauri.localhost/#frag`,
+// so it opened a browser tab (issue #52). Stopping propagation here, on the
+// editor's own DOM, keeps the click from ever reaching that listener.
+const InternalLinkNavigation = Extension.create({
+  name: 'internalLinkNavigation',
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: new PluginKey('internalLinkNavigation'),
+        props: {
+          handleDOMEvents: {
+            click(view, event) {
+              const anchor = event.target instanceof Element ? event.target.closest('a') : null
+              if (!anchor || !view.dom.contains(anchor)) return false
+              const fragment = internalLinkFragment(anchor.getAttribute('href'))
+              if (fragment === null) return false
+              event.preventDefault()
+              event.stopPropagation()
+              // Leave shift-click (extend selection) and a drag that selected
+              // part of the link text alone — only a plain click navigates.
+              if (event.shiftKey || !window.getSelection()?.isCollapsed) return true
+              navigateToHeading(view, fragment)
+              return true
+            },
+          },
+        },
+      }),
+    ]
+  },
+})
+
 // Create extensions that disable input rules.
 // `onExpandDiagram` and the comment callbacks must be identity-stable:
 // `extensions` is a useEditor dependency, so a new function each render would
@@ -504,6 +539,7 @@ function createExtensions(
     }),
     JoinAdjacentBlockquotes,
     ClipboardMarkdown,
+    InternalLinkNavigation,
     SearchReplace,
     CodeBlockTabIndent,
     EscapeTabExit,

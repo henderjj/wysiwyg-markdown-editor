@@ -138,6 +138,8 @@ To remove a link, click on it and then click the **✕** button that appears on 
 
 A floating toolbar appears when you click a link, letting you open, edit, or remove it.
 
+**Links within the document.** A link whose URL starts with `#` points at a heading in the same document — handy for a table of contents. Clicking it jumps to that heading instead of opening a browser. The part after `#` is the heading text as GitHub writes it: lowercase, punctuation removed, spaces turned into hyphens. For example, `[Setup](#1-getting-started)` jumps to the heading `1. Getting Started`. If two headings have the same text, the second is `#name-1`, the third `#name-2`, and so on. Links to web addresses still open in your browser.
+
 ### Images
 
 Click **IMG** on the toolbar to insert an image. You can provide a URL and alt text.
