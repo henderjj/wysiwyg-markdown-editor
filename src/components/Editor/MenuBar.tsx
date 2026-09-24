@@ -3,6 +3,8 @@ import { useState, useRef, useEffect } from 'react'
 import { common } from 'lowlight'
 import { TableCreationDialog } from './TableCreationDialog'
 import { ImageDialog } from './ImageDialog'
+import { LinkDialog } from './LinkDialog'
+import { applyLink, getLinkTarget, headingOptions, removeLink, type HeadingOption, type LinkTarget } from '../../lib/linkEditing'
 import { getActiveComment, addCommentBlocker, deleteComment } from '../../extensions/critic-markup/CriticMarkup'
 
 const codeLanguages = Object.keys(common).sort()
@@ -432,6 +434,62 @@ function ImageMenu({ editor }: { editor: Editor }) {
   )
 }
 
+function LinkMenu({ editor }: { editor: Editor }) {
+  const [target, setTarget] = useState<LinkTarget | null>(null)
+  const [headings, setHeadings] = useState<HeadingOption[]>([])
+  const inLink = editor.isActive('link')
+
+  const open = () => {
+    setHeadings(headingOptions(editor.state.doc))
+    setTarget(getLinkTarget(editor.state))
+  }
+
+  const close = () => {
+    setTarget(null)
+    editor.commands.focus()
+  }
+
+  return (
+    <>
+      <MenuButton
+        onClick={open}
+        isActive={inLink}
+        title={inLink ? 'Edit link' : 'Insert link'}
+      >
+        🔗
+      </MenuButton>
+
+      {inLink && (
+        <MenuButton
+          onClick={() => editor.chain().focus().unsetLink().run()}
+          title="Remove link"
+        >
+          ✕
+        </MenuButton>
+      )}
+
+      {target && (
+        <LinkDialog
+          mode={target.mode}
+          initialHref={target.href}
+          initialText={target.text}
+          textEditable={target.textEditable}
+          headings={headings}
+          onSubmit={(href, text) => {
+            setTarget(null)
+            applyLink(editor, target, href, text)
+          }}
+          onRemove={() => {
+            setTarget(null)
+            removeLink(editor, target)
+          }}
+          onClose={close}
+        />
+      )}
+    </>
+  )
+}
+
 function CommentButtons({ editor, onRequestComment }: { editor: Editor; onRequestComment?: () => void }) {
   const active = getActiveComment(editor.state)
   if (!active) {
@@ -597,57 +655,7 @@ export function MenuBar({ editor, showSearchBar, onToggleFind, onRequestComment 
       <Divider />
 
       {/* Links */}
-      <MenuButton
-        onClick={() => {
-          // Get currently selected text
-          const { from, to } = editor.state.selection
-          const selectedText = editor.state.doc.textBetween(from, to, '')
-
-          const url = window.prompt('Enter URL:')
-          if (!url) return
-
-          const displayText = window.prompt('Enter display text (leave empty to show URL):', selectedText)
-
-          // If user cancelled the display text prompt, still proceed with URL or selected text
-          const finalText = displayText !== null ? displayText : selectedText
-
-          if (selectedText) {
-            // There's selected text - replace it with the link
-            if (finalText && finalText !== selectedText) {
-              // Replace selected text with new display text
-              editor
-                .chain()
-                .focus()
-                .deleteSelection()
-                .insertContent(`<a href="${url}">${finalText || url}</a>`)
-                .run()
-            } else {
-              // Just wrap the selected text with the link
-              editor.chain().focus().setLink({ href: url }).run()
-            }
-          } else {
-            // No selection - insert new link with display text or URL
-            editor
-              .chain()
-              .focus()
-              .insertContent(`<a href="${url}">${finalText || url}</a>`)
-              .run()
-          }
-        }}
-        isActive={editor.isActive('link')}
-        title="Add Link"
-      >
-        🔗
-      </MenuButton>
-
-      {editor.isActive('link') && (
-        <MenuButton
-          onClick={() => editor.chain().focus().unsetLink().run()}
-          title="Remove Link"
-        >
-          ✕
-        </MenuButton>
-      )}
+      <LinkMenu editor={editor} />
 
       <Divider />
 

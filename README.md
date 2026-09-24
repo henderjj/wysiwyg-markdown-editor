@@ -15,8 +15,9 @@ Users interact with a familiar rich-text interface while the application maintai
 - **Tables** — visual grid picker or manual size input, with add/delete rows and columns, merge/split cells, toggle header row, and resize handles
 - **Code blocks** — fenced blocks with syntax highlighting (highlight.js) and 40+ language options
 - **Mermaid diagrams** — ` ```mermaid ` blocks render as diagrams (read-only) with a per-block toggle to edit the raw source and re-render, plus an expanded viewer (**⤢ Expand** / `Alt+Enter`) with mouse-wheel zoom and click-drag pan
-- **Links and images** — insert and edit via dialogs with floating toolbars on selection (images display in-editor from `http(s)://` URLs; see [Known Limitations](#known-limitations))
-- **Following links** — Ctrl+Click (Cmd+Click on macOS) follows a link; a plain click edits the link text. `[text](#heading-slug)` jumps to that heading (GitHub-style slugs), so a table of contents works; web links open in the browser
+- **Links** — a link dialog for inserting, editing and removing links, with a picker for linking to a heading in the same document; the 🔗 button edits the link under the cursor
+- **Images** — insert and edit via a dialog, with a floating toolbar when selected (images display in-editor from `http(s)://` URLs; see [Known Limitations](#known-limitations))
+- **Following links** — Ctrl+Click (Cmd+Click on macOS) follows a link; a plain click edits the link text, and hovering shows the URL and how to follow it. `[text](#heading-slug)` jumps to that heading (GitHub-style slugs), so a table of contents works; web links open in the browser
 - **Blockquotes and horizontal rules**
 - **Review comments** — comment on selected text or at the cursor (Ctrl+Shift+M), typed directly into a comment bubble that also shows on hover or when the cursor is in a comment, with edit and delete buttons; stored in the file as [CriticMarkup](https://github.com/CriticMarkup/CriticMarkup-toolkit) (`{==text==}{>>comment<<}`); optional author and timestamp set in **Options > Preferences** (Ctrl+,), with the author defaulting to the OS account name in the desktop app
 - **Markdown shortcuts** — optionally type `# `, `**`, etc. to trigger formatting (toggle on/off)

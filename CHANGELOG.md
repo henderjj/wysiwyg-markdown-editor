@@ -4,6 +4,36 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0]
+
+### Added
+
+- **A link dialog** replaces the two browser prompts the 🔗 button used to show. It has fields for the display text and the URL, and a list of the document's headings: picking one fills in its `#slug` (and the display text, if empty), so table-of-contents links no longer need slugs typed by hand. `Enter` saves and `Esc` cancels. A `javascript:` or similar URL is rejected in the dialog rather than silently dropped.
+- **The 🔗 button edits the link under the cursor.** With the caret or selection inside a link, the dialog opens as Edit Link with its text and URL filled in, and has a Remove Link button. Changing only the URL keeps any formatting inside the link. When the selection spans several paragraphs or contains an image or comment, only the URL can be set, because replacing the text would delete them.
+- **The link hover tooltip says how to follow the link.** The existing tooltip, which showed only the URL, now adds "Ctrl+Click to open link" or "Ctrl+Click to go to heading" (Cmd on macOS) on a second line. Links that Ctrl+Click can't open, such as relative file paths, still show just the URL.
+
+### Changed
+
+- The toolbar button's tooltip reads "Insert link" or "Edit link" to match what it will do.
+- Links are now inserted as ProseMirror content instead of an HTML string built from the typed URL and text, so characters such as `<` or `"` in either one are inserted literally.
+
+### Implementation notes
+
+- The tooltip text comes from an inline decoration held in `LinkNavigation`'s plugin state, which sets a `data-link-tip` attribute that the tooltip's CSS rule displays. Decorations exist only in the editor view, so the text never reaches `getHTML()` or the saved file.
+- Edit mode uses `isMarkActive`, the same test that highlights the button, so the button edits exactly when it looks active. Link isn't inclusive, so a caret just past a link's end inserts a new link rather than editing that one.
+
+### Verification
+
+`npm test` passes 271 tests, including a new `linkEditing` suite run against a real TipTap editor. It covers edit and insert detection, inserting, wrapping and replacing text, keeping formatting, multi-paragraph selections, removal, heading slugs, rejected URLs and the tooltip text, and checks the tooltip never appears in `getHTML()`. `npm run build` passes and `npm run lint` shows no new warnings. Checked by driving the app in Chromium, in light and dark themes:
+
+- editing an existing link's URL from inside the link
+- inserting a heading link on selected text with the heading picker
+- a `javascript:` URL disabling the Insert button with an error
+- `Esc` closing the dialog and returning focus to the editor
+- Remove Link
+- the hover tooltip text
+- no browser prompt appearing at any point
+
 ## [1.9.1]
 
 ### Fixed

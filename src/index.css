@@ -143,9 +143,13 @@ html {
   @apply text-blue-600 underline hover:text-blue-800 cursor-pointer relative;
 }
 
-.ProseMirror a:hover::after {
-  content: attr(href);
-  @apply absolute left-0 top-full mt-1 px-2 py-1 text-xs font-normal no-underline rounded-sm shadow-lg whitespace-nowrap z-50 bg-gray-800 text-gray-100;
+/* Link hover tooltip: URL plus how to follow it. The text comes from a
+   view-only decoration (linkTooltipDecorations in linkEditing.ts) on the text
+   inside the link; the relative <a> is the containing block, so the tooltip
+   sits under the whole link whichever part of it is hovered. */
+.ProseMirror a [data-link-tip]:hover::after {
+  content: attr(data-link-tip);
+  @apply absolute left-0 top-full mt-1 px-2 py-1 text-xs font-normal no-underline rounded-sm shadow-lg whitespace-pre z-50 bg-gray-800 text-gray-100;
 }
 
 .ProseMirror hr {
@@ -403,7 +407,7 @@ html {
   @apply text-blue-400 hover:text-blue-300;
 }
 
-.dark .ProseMirror a:hover::after {
+.dark .ProseMirror a [data-link-tip]:hover::after {
   @apply bg-gray-200 text-gray-900;
 }
 
