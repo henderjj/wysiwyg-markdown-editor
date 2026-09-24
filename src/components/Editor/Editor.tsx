@@ -15,6 +15,7 @@ import { canJoin } from '@tiptap/pm/transform'
 import { htmlToMarkdown } from '../../lib/markdown'
 import { ESCAPABLE_PUNCTUATION } from '../../lib/markdownParser'
 import { internalLinkFragment, navigateToHeading } from '../../lib/headingAnchors'
+import { openExternalUrl } from '../../lib/tauri'
 import { common, createLowlight } from 'lowlight'
 import { MenuBar } from './MenuBar'
 import { FloatingTableToolbar } from './FloatingTableToolbar'
@@ -311,31 +312,31 @@ const ClipboardMarkdown = Extension.create({
   },
 })
 
-// Clicking an in-document link (`#section`) jumps to that heading.
-// Link renders every anchor with `target="_blank"`, and in the Tauri build the
-// shell plugin's click listener on <body> sends any `_blank` http(s) link to
-// the system browser — a bare `#frag` resolves to `http://tauri.localhost/#frag`,
-// so it opened a browser tab (issue #52). Stopping propagation here, on the
-// editor's own DOM, keeps the click from ever reaching that listener.
-const InternalLinkNavigation = Extension.create({
-  name: 'internalLinkNavigation',
+// Links are followed with Ctrl+Click (Cmd+Click on macOS); a plain click only
+// places the caret, so link text can be edited like any other text.
+// Every link click is handled here and never propagates: Link renders anchors
+// with `target="_blank"`, and in the Tauri build the shell plugin's click
+// listener on <body> would otherwise open any `_blank` http(s) link on a plain
+// click — including a bare `#frag`, which resolves to
+// `http://tauri.localhost/#frag` (issue #52).
+const LinkNavigation = Extension.create({
+  name: 'linkNavigation',
   addProseMirrorPlugins() {
     return [
       new Plugin({
-        key: new PluginKey('internalLinkNavigation'),
+        key: new PluginKey('linkNavigation'),
         props: {
           handleDOMEvents: {
             click(view, event) {
               const anchor = event.target instanceof Element ? event.target.closest('a') : null
               if (!anchor || !view.dom.contains(anchor)) return false
-              const fragment = internalLinkFragment(anchor.getAttribute('href'))
-              if (fragment === null) return false
               event.preventDefault()
               event.stopPropagation()
-              // Leave shift-click (extend selection) and a drag that selected
-              // part of the link text alone — only a plain click navigates.
-              if (event.shiftKey || !window.getSelection()?.isCollapsed) return true
-              navigateToHeading(view, fragment)
+              if (!(event.ctrlKey || event.metaKey)) return false
+              const href = anchor.getAttribute('href')
+              const fragment = internalLinkFragment(href)
+              if (fragment !== null) navigateToHeading(view, fragment)
+              else if (href) void openExternalUrl(href)
               return true
             },
           },
@@ -539,7 +540,7 @@ function createExtensions(
     }),
     JoinAdjacentBlockquotes,
     ClipboardMarkdown,
-    InternalLinkNavigation,
+    LinkNavigation,
     SearchReplace,
     CodeBlockTabIndent,
     EscapeTabExit,
