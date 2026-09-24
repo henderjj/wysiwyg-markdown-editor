@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **When work is complete and ready to commit, check whether the app version needs incrementing** (new feature → minor, bug fix → patch). The version is recorded in five places that must stay in sync: `package.json`, `package-lock.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`, and the `wysiwyg-markdown` entry in `src-tauri/Cargo.lock` (do not touch other crates' version lines). Do not edit them by hand — run `node scripts/bump-version.mjs <patch|minor|major|x.y.z>`, which edits all five with anchored replacements and then verifies that all five actually agree before exiting. Include the new version in the commit message title, e.g. `(v1.4.1)`. Skip the bump only for changes with no shipped-behavior impact (docs-only, test-only, tooling).
 
-**Keep PR descriptions limited to the code changes in the PR.** Describe what the diff changes. Leave out background reasoning, rejected alternatives, follow-up ideas and "not in this PR" notes.
+**PR descriptions describe what the PR changes, in the usual form.** Open with a short summary of what the PR does and its effect for users, then list the main changes grouped by feature or behaviour, not file by file or function by function. Stick to what the diff contains: leave out background reasoning, rejected alternatives, follow-up ideas and "not in this PR" notes.
 
 ## Build & Dev Commands
 
