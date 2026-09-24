@@ -4,6 +4,30 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.1]
+
+### Fixed
+
+- **In-document links jump to their heading** (#52, #53). A table of contents like `[Heading 1](#1-heading-1)` used to open a browser tab at `http://tauri.localhost/#1-heading-1` in the desktop app. Now it moves the caret to the heading and scrolls it into view. Fragments are matched against GitHub-style heading slugs (lowercase, punctuation dropped, spaces turned into hyphens), so `# 1. Heading 1` is `#1-heading-1`. Repeated headings take `-1`, `-2` suffixes as on GitHub, and a case-insensitive match that ignores repeated hyphens accepts anchors made by other tools. The matching lives in `src/lib/headingAnchors.ts`.
+
+### Changed
+
+- **Links are followed with Ctrl+Click** (Cmd+Click on macOS). A plain click now only places the caret, so link text can be edited like any other text. Before this, the desktop app opened web links in the browser on a plain click. Ctrl+Click jumps to the heading for a `#` link and opens web, `mailto:` and `tel:` links in the system browser. Any other link, such as `other.md` or `javascript:`, is ignored. Listed in the Keyboard Shortcuts dialog as "Follow link".
+- The user guide no longer mentions a floating toolbar for links, which never existed.
+
+### Implementation notes
+
+- The cause of both issues was TipTap's Link giving every anchor `target="_blank"`, combined with `tauri-plugin-shell`'s injected `<body>` click listener, which sends any `_blank` http(s) link to the system browser. A bare `#fragment` resolves to an `http://tauri.localhost/…` URL, so it qualified. The new `LinkNavigation` extension in `Editor.tsx` handles every link click on the editor's own DOM and calls `stopPropagation()`, so the listener never sees one. `preventDefault()` alone does not stop that listener. External links go through a new `openExternalUrl()` in `src/lib/tauri.ts`, which uses the shell plugin's `open` (covered by the existing `shell:allow-open` permission) in the desktop app and `window.open` on the web.
+- The web build has no such listener, so the bug does not reproduce in a plain browser. The browser check below injected a copy of the plugin's listener.
+
+### Verification
+
+`npm test` passes 251 tests, including new `headingAnchors` and `tauri` suites. They cover slugs, duplicate headings, fragment decoding, fallback matching, `#` links surviving open and save, jumping to a heading in a real TipTap editor, and which URL schemes are opened. `npm run build` passes and `npm run lint` shows no new warnings. Checked by driving the app in Chromium with a copy of the shell plugin's listener injected:
+
+- before the fix, clicking a `#` link handed `http://localhost:5173/#…` to that listener
+- after it, a plain click on any link opens nothing and typing edits the link text
+- Ctrl+Click and Cmd+Click jump to the right heading, and Ctrl+Click on an https link opens it
+
 ## [1.9.0]
 
 ### Added
