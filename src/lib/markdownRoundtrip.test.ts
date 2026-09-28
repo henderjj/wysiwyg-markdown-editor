@@ -875,6 +875,110 @@ describe('CriticMarkup', () => {
   })
 })
 
+describe('HTML entities', () => {
+  const stable = (md: string) => {
+    const first = roundtrip(md)
+    expect(first).toBe(md + '\n')
+    expect(roundtrip(first)).toBe(first)
+  }
+
+  describe('import', () => {
+    it.each([
+      ['&amp;', '&amp;amp;', '&amp;'],
+      ['&lt;', '&amp;lt;', '&lt;'],
+      ['&copy;', '&amp;copy;', '©'],
+      ['&#169;', '&amp;#169;', '©'],
+      ['&#xA9;', '&amp;#xA9;', '©'],
+      ['&nbsp;', '&amp;nbsp;', '\u00A0'],
+      ['&ngE;', '&amp;ngE;', '≧̸'],
+      ['&#0;', '&amp;#0;', '\uFFFD'],
+    ])('%s is decoded and keeps its source', (md, attr, text) => {
+      expect(markdownToHtml(`a ${md} b`)).toBe(`<p>a <span data-entity="${attr}">${text}</span> b</p>`)
+    })
+
+    it.each(['&foo;', '&copy', '&#;', '&#12345678;', '&#x1234567;', '& amp;'])('%s is not an entity', (md) => {
+      expect(markdownToHtml(md)).not.toContain('data-entity')
+    })
+
+    it('a decoded * or _ does not open emphasis', () => {
+      expect(markdownToHtml('&#42;x&#42; &lowbar;y&lowbar;')).not.toMatch(/<em>/)
+    })
+
+    it('a decoded # at line start does not make a heading', () => {
+      expect(markdownToHtml('&#35; Not a heading')).toMatch(/^<p>/)
+    })
+
+    it('stays literal in code spans and code blocks', () => {
+      expect(markdownToHtml('`&amp;`')).toBe('<p><code>&amp;amp;</code></p>')
+      expect(markdownToHtml('```\n&amp;\n```')).not.toContain('data-entity')
+    })
+
+    it('stays literal when backslash-escaped', () => {
+      expect(markdownToHtml('\\&amp;')).toBe('<p>&amp;amp;</p>')
+    })
+
+    it('stays literal in a CriticMarkup comment body', () => {
+      expect(markdownToHtml('{==a==}{>>x &amp; y<<}')).toContain('data-comment="x &amp;amp; y"')
+    })
+
+    it('keeps its source in link URLs and image attributes', () => {
+      expect(markdownToHtml('[a &amp; b](http://x.y/?a=1&amp;b=2)')).toBe(
+        '<p><a href="http://x.y/?a=1&amp;amp;b=2">a <span data-entity="&amp;amp;">&amp;</span> b</a></p>')
+      expect(markdownToHtml('![a &amp; b](p&amp;q.png)')).toBe('<p><img src="p&amp;amp;q.png" alt="a &amp;amp; b"></p>')
+    })
+
+    it('&#124; in a table cell does not split it', () => {
+      const html = markdownToHtml('| a | b |\n| --- | --- |\n| x &#124; y | z |')
+      expect(html).toContain('<td><p>x <span data-entity="&amp;#124;">|</span> y</p></td>')
+    })
+  })
+
+  describe('roundtrip', () => {
+    it.each([
+      'Tom &amp; Jerry',
+      '&lt;div&gt;',
+      '&copy; 2026',
+      '&#169; &#xA9; &#XA9;',
+      'a&nbsp;b',
+      '&nbsp;',
+      '&nbsp;leading and trailing&nbsp;',
+      '&#42;not italic&#42;',
+      '&#35; not a heading',
+      '**&amp;** and *&copy;* and ~~&lt;~~',
+      '[&copy; link](http://x.y)',
+      '# Tom &amp; Jerry',
+      '- item &rarr; next',
+      '> quote &mdash; here',
+      '{==a &amp; b==}{>>n<<}',
+      '`&amp;` stays code',
+    ])('%s', (md) => stable(md))
+
+    it('entities in a table cell', () => {
+      stable('| a &amp; b | x &#124; y |\n| --- | --- |\n| &nbsp; | &lt; |')
+    })
+
+    it('unknown names and bare ampersands are left alone', () => {
+      stable('Tom & Jerry &foo; &copy')
+    })
+  })
+
+  describe('export escaping of literal text', () => {
+    it('text typed as an entity is escaped so it stays literal', () => {
+      const md = htmlToMarkdown('<p>&amp;copy; &amp;#169; &amp;amp;</p>')
+      expect(md).toBe('\\&copy; \\&#169; \\&amp;\n')
+      expect(markdownToHtml(md)).toBe('<p>&amp;copy; &amp;#169; &amp;amp;</p>')
+    })
+
+    it('a bare & that is not an entity is not escaped', () => {
+      expect(htmlToMarkdown('<p>Tom &amp; Jerry &amp;foo; R&amp;D</p>')).toBe('Tom & Jerry &foo; R&D\n')
+    })
+
+    it('an edited entity is exported as its new text', () => {
+      expect(htmlToMarkdown('<p>a <span data-entity="&amp;copy;">x</span> b</p>')).toBe('a x b\n')
+    })
+  })
+})
+
 describe('comment metadata', () => {
   const opts = { includeAuthor: true, includeTimestamp: true, author: 'Joe Bloggs' }
   const when = new Date(2026, 8, 21, 14, 0)

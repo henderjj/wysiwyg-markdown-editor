@@ -26,6 +26,7 @@ import { FloatingImageToolbar } from './FloatingImageToolbar'
 import { ImageDialog } from './ImageDialog'
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { SearchReplace } from '../../extensions/search-replace'
+import { HtmlEntity } from '../../extensions/html-entity'
 import { posToDOMRect } from '@tiptap/core'
 import {
   CriticHighlight, CriticComment, CriticMarkupUI,
@@ -549,6 +550,7 @@ function createExtensions(
     }),
     CriticHighlight,
     CriticComment,
+    HtmlEntity,
     CriticMarkupUI.configure({
       onRequestComment: onRequestComment ?? null,
       onHoverComment: onHoverComment ?? null,
