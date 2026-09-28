@@ -89,6 +89,16 @@ Select text and click a toolbar button, or use keyboard shortcuts:
 
 You can combine formats — for example, bold and italic at the same time.
 
+### HTML Entities
+
+Markdown files often contain HTML entities such as `&amp;`, `&lt;`, `&copy;` or `&nbsp;`, or numeric ones such as `&#169;` and `&#xA9;`. The editor shows each one as the character it stands for (`&`, `<`, `©`, a non-breaking space) — the same entities GitHub displays — and saves it back exactly as it was written, so opening and saving a file never rewrites its entities.
+
+- An entity behaves like any other character: you can search for it, copy it, or delete it. If you replace it with other text, the new text is saved instead.
+- Entities inside inline code and code blocks are shown as written, as on GitHub.
+- A name that isn't a real entity, such as `&foo;`, is shown as ordinary text.
+- To write entity text literally, just type it — typing `&copy;` shows `&copy;` and is saved as `\&copy;` so that it stays literal when the file is reopened.
+- Entities in a link's address or an image's alt text are left as written rather than decoded.
+
 ---
 
 ## Headings

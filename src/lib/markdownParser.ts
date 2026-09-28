@@ -3,6 +3,8 @@
  * This is a simple parser for GFM - handles common elements
  */
 
+import { ENTITY_PATTERN, decodeEntity } from './htmlEntities'
+
 interface ParseState {
   inCodeBlock: boolean
   codeBlockLang: string
@@ -461,6 +463,20 @@ function parseInline(text: string): string {
   result = result.replace(/\{&gt;&gt;(.*?)&lt;&lt;\}/g,
     (_, body) => `<span class="critic-comment-marker" data-critic-comment="${stashComment(body)}">💬</span>`)
 
+  // HTML entities (&amp; &copy; &#169; &#xA9;) — see src/extensions/html-entity.ts.
+  // Runs after the escape, code-span and comment stashes, so \&amp;, code and
+  // comment bodies stay literal. Matched against the entity-escaped text, where
+  // the source's & is &amp; — so the match itself is the attribute value.
+  // Stashed, so a decoded * or _ can't open emphasis (&#42;x&#42; is literal
+  // *x* in CommonMark). Unknown names such as &foo; are left as text.
+  const entities: { html: string; source: string }[] = []
+  result = result.replace(new RegExp('&amp;' + ENTITY_PATTERN.source.slice(1), 'g'), (match, ref) => {
+    const decoded = decodeEntity(`&${ref};`)
+    if (decoded === null) return match
+    entities.push({ html: `<span data-entity="${match}">${escapeHtml(decoded)}</span>`, source: match })
+    return `\x00ENT${entities.length - 1}\x00`
+  })
+
   // Bold (must come before italic). Underscore delimiters require a non-word
   // character on the outside — GFM forbids intraword _ emphasis (snake_case,
   // dunder__names stay literal) but allows intraword * emphasis. Unicode
@@ -481,6 +497,13 @@ function parseInline(text: string): string {
   // Links
   result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
 
+  // Entities that landed in an attribute (link href, image src/alt) keep their
+  // source spelling: an attribute can't hold the entity mark, and decoding
+  // there would rewrite the URL on the next save.
+  result = result.replace(/="([^"]*)"/g, (attr) =>
+    // eslint-disable-next-line no-control-regex -- NUL is the deliberate placeholder sentinel; it cannot appear in input (stripped on normalize)
+    attr.replace(/\x00ENT(\d+)\x00/g, (_, i) => entities[parseInt(i)].source))
+
   // Restore inline code spans
   // eslint-disable-next-line no-control-regex -- NUL is the deliberate placeholder sentinel; it cannot appear in input (stripped on normalize)
   result = result.replace(/\x00CODE(\d+)\x00/g, (_, i) => codeSpans[parseInt(i)])
@@ -489,6 +512,10 @@ function parseInline(text: string): string {
   // placeholder inside a body was already swapped for its source above)
   // eslint-disable-next-line no-control-regex -- NUL is the deliberate placeholder sentinel; it cannot appear in input (stripped on normalize)
   result = result.replace(/\x00CMT(\d+)\x00/g, (_, i) => comments[parseInt(i)])
+
+  // Restore HTML entities
+  // eslint-disable-next-line no-control-regex -- NUL is the deliberate placeholder sentinel; it cannot appear in input (stripped on normalize)
+  result = result.replace(/\x00ENT(\d+)\x00/g, (_, i) => entities[parseInt(i)].html)
 
   // Restore backslash-escaped characters as their literal form, entity-escaped
   // because they were stashed from the raw text (\& → &amp;, \< → &lt;)

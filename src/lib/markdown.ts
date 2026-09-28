@@ -9,6 +9,8 @@ import {
   clearFilePath as clearTauriFilePath,
 } from './tauri'
 import { writeClipboardText } from './clipboard'
+import { decodeHTMLStrict } from 'entities'
+import { decodeEntity, startsWithEntity } from './htmlEntities'
 
 // Configure Turndown for GFM output
 const turndownService = new TurndownService({
@@ -40,6 +42,8 @@ turndownService.escape = function turndownEscape(text: string): string {
   //   bare _ → escape to \_ unless intraword (word chars on both sides —
   //     the parser's emphasis guards use the same predicate, so an intraword _
   //     can never open/close emphasis; keeps snake_case clean in saved files)
+  //   bare & that would be read back as an entity (&copy;) → \&, so text
+  //     typed as "&copy;" stays literal; "Tom & Jerry" is left alone
   //   bare # > - + and ordered-list "1. " at line start → second pass below
   //
   // The import parser accepts \X for ALL CommonMark punctuation
@@ -59,7 +63,7 @@ turndownService.escape = function turndownEscape(text: string): string {
       const intraword = i > 0 && i < text.length - 1
         && wordChar.test(text[i - 1]) && wordChar.test(text[i + 1])
       result += intraword ? '_' : '\\_'
-    } else if (inlineSpecial.has(ch)) {
+    } else if (inlineSpecial.has(ch) || (ch === '&' && startsWithEntity(text.slice(i)))) {
       result += '\\' + ch
     } else {
       result += ch
@@ -355,7 +359,8 @@ turndownService.addRule('tableCell', {
  * so they survive round-trips through the parser.
  */
 export function htmlToMarkdown(html: string): string {
-  let md = turndownService.turndown(html)
+  const entities: string[] = []
+  let md = turndownService.turndown(protectEntities(html, entities))
   // Collapse 3+ consecutive newlines into a single blank line
   md = md.replace(/\n{3,}/g, '\n\n')
   // Remove blank lines around non-blockquote lines sandwiched between blockquote lines
@@ -379,7 +384,25 @@ export function htmlToMarkdown(html: string): string {
   if (md.length > 0 && !md.endsWith('\n')) {
     md += '\n'
   }
-  return md
+  // Put back the entity spellings protectEntities() set aside
+  return md.replace(/(\d+)/g, (token, i) => entities[parseInt(i)] ?? token)
+}
+
+// HTML entities (see src/extensions/html-entity.ts) are written back with the
+// spelling they were opened with. Each unedited entity span is swapped for a
+// private-use placeholder before Turndown runs and restored afterwards.
+// Turndown can't be handed the span itself: it copies a whitespace-only
+// element's text (&nbsp;) outside the element's output, which would write the
+// character twice. The span is always the innermost mark, so it holds only
+// text. A span whose text was edited no longer matches its source and is
+// exported as ordinary text.
+function protectEntities(html: string, entities: string[]): string {
+  return html.replace(/<span data-entity="([^"]*)">([^<]*)<\/span>/g, (span, attr, text) => {
+    const source = decodeHTMLStrict(attr)
+    if (decodeEntity(source) !== decodeHTMLStrict(text)) return span
+    entities.push(source)
+    return `${entities.length - 1}`
+  })
 }
 
 /**

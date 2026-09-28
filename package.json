@@ -1,7 +1,7 @@
 {
   "name": "wysiwyg-markdown",
   "private": true,
-  "version": "1.11.0",
+  "version": "1.12.0",
   "type": "module",
   "description": "A WYSIWYG editor that produces GitHub Flavored Markdown",
   "license": "MIT",
@@ -38,6 +38,7 @@
     "@tiptap/pm": "^3.31.3",
     "@tiptap/react": "^3.31.3",
     "@tiptap/starter-kit": "^3.31.3",
+    "entities": "^8.1.0",
     "highlight.js": "^11.12.0",
     "lodash-es": "^4.18.1",
     "lowlight": "^3.2.0",

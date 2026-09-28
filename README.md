@@ -22,6 +22,7 @@ Users interact with a familiar rich-text interface while the application maintai
 - **Review comments** — comment on selected text or at the cursor (Ctrl+Shift+M), typed directly into a comment bubble that also shows on hover or when the cursor is in a comment, with edit and delete buttons; stored in the file as [CriticMarkup](https://github.com/CriticMarkup/CriticMarkup-toolkit) (`{==text==}{>>comment<<}`); optional author and timestamp set in **Options > Preferences** (Ctrl+,), with the author defaulting to the OS account name in the desktop app
 - **Markdown shortcuts** — optionally type `# `, `**`, etc. to trigger formatting (toggle on/off)
 - **Backslash escapes** — type `\*`, `\#`, `\&`, etc. (any punctuation character) to insert literal markdown characters without triggering formatting; words with internal underscores like `snake_case` never turn italic
+- **HTML entities** — `&amp;`, `&copy;`, `&nbsp;`, `&#169;`, `&#xA9;` and every other entity GitHub renders are shown as their characters and saved exactly as written
 
 ### Find & Replace
 - **Find** (Ctrl+F) — search with match count and navigation between results
@@ -163,7 +164,7 @@ Either way, publishing the draft is a deliberate manual step. Do not create the 
 | Editor | TipTap (ProseMirror) |
 | Styling | Tailwind CSS v4 (CSS-first config) |
 | Markdown export | Turndown (HTML → Markdown) |
-| Markdown import | Custom GFM parser (Markdown → HTML) |
+| Markdown import | Custom GFM parser (Markdown → HTML); `entities` for HTML entity decoding |
 | Syntax highlighting | highlight.js via lowlight |
 | Diagrams | Mermaid (lazy-loaded) |
 | Desktop | Tauri 2 |
@@ -201,6 +202,7 @@ Markdown file  →  markdownToHtml()  →  TipTap editor  →  htmlToMarkdown() 
 | Tables | GFM pipe tables |
 | Horizontal rules | `---` |
 | Backslash escapes | Any punctuation: `\*`, `\#`, `\&`, `\\`, etc. |
+| HTML entities | Named (`&amp;`, `&copy;`, `&nbsp;`), decimal (`&#169;`) and hex (`&#xA9;`); literal in code |
 | Review comments (CriticMarkup) | `{==text==}{>>comment<<}`, `{>>comment<<}`, `{==text==}` |
 
 ## Known Limitations
@@ -214,6 +216,8 @@ Fixing this needs two things: resolving relative paths against the open document
 **Setext (underline-style) headings are not supported.** `Title` followed by a line of `===` is read as two paragraphs. Note that the `---` form is worse: `Title` followed by `---` becomes a paragraph plus a horizontal rule, because the `---` is matched as a thematic break first. Use ATX headings (`# Title`) instead.
 
 **Only CriticMarkup comments and highlights are supported.** Additions (`{++ ++}`), deletions (`{-- --}`) and substitutions (`{~~ ~> ~~}`) are shown and saved as ordinary text. A comment must sit within a single paragraph, heading, list item or table cell, and comment text is a single line. Backticks and backslashes inside a comment written by another tool are backslash-escaped the first time the file is saved.
+
+**HTML entities in link and image addresses are not decoded.** In `[text](https://example.com/?a=1&amp;b=2)` the URL is kept exactly as written, so the file is unchanged on save, but following the link opens it with a literal `&amp;`. Entities in the link text itself are displayed normally. Image alt text also keeps entities as written.
 
 ## Contributing
 
