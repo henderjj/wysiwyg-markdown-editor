@@ -38,15 +38,15 @@ fn force_exit(window: tauri::Window) {
 }
 
 /// The OS user's display name (e.g. "Joe Bloggs"), used as the default author
-/// of review comments. Falls back to the login name when no display name is set.
+/// of review comments. Falls back to the login name when no display name is set,
+/// and to an empty string if neither can be read.
 #[tauri::command]
 fn get_user_real_name() -> String {
-    let real = whoami::realname();
-    if real.trim().is_empty() {
-        whoami::username()
-    } else {
-        real
-    }
+    whoami::realname()
+        .ok()
+        .filter(|real| !real.trim().is_empty())
+        .or_else(|| whoami::username().ok())
+        .unwrap_or_default()
 }
 
 fn main() {
