@@ -4,6 +4,18 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.1]
+
+### Changed
+
+- Merged 6 Dependabot dependency updates since v1.12.0:
+  - Bump brace-expansion from 5.0.9 to 5.0.12 (#65)
+  - Bump dompurify from 3.4.13 to 3.4.16 (#64)
+  - Bump whoami from 1.6.1 to 2.1.3 in /src-tauri (#63)
+  - Bump the cargo-minor-patch group in /src-tauri with 8 updates (#62)
+  - Bump the development-minor-patch group across 1 directory with 5 updates (#61)
+  - Bump vite from 8.3.0 to 8.3.1 in the vite group (#60)
+
 ## [1.10.0]
 
 ### Added
