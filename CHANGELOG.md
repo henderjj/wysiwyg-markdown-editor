@@ -4,6 +4,17 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.2]
+
+### Changed
+
+- Merged 5 Dependabot dependency updates since v1.12.1:
+  - Bump the development-minor-patch group across 1 directory with 5 updates (#71)
+  - Bump source-map-js from 1.2.1 to 1.2.2 (#70)
+  - Bump mermaid from 12.0.0 to 12.1.0 in the production-minor-patch group (#68)
+  - Bump vite from 8.3.1 to 8.3.2 in the vite group (#67)
+  - Bump the tiptap group with 13 updates (#66)
+
 ## [1.12.1]
 
 ### Changed
