@@ -22,7 +22,7 @@ Tests run with vitest (`npm test` → `vitest run`, jsdom environment). The main
 
 ## Releasing
 
-The normal route is the **Version Bump and Release** workflow (`.github/workflows/version-bump.yml`), run manually from the Actions tab — built for the "merged a batch of Dependabot PRs, now ship it" case. It bumps the version via `scripts/bump-version.mjs`, drafts a `CHANGELOG.md` section via `scripts/release-notes.mjs`, gates on lint/test/build, commits, tags, and calls `release.yml`. A `dry_run` input does everything except commit, push and tag.
+The normal route is the **Version Bump and Release** workflow (`.github/workflows/version-bump.yml`), run manually from the Actions tab — built for the "merged a batch of Dependabot PRs, now ship it" case. It bumps the version via `scripts/bump-version.mjs`, drafts a `CHANGELOG.md` section via `scripts/release-notes.mjs`, gates on lint/test/build, commits, tags, and calls `release.yml`. A `dry_run` input does everything except commit, push and tag. When a PR has already bumped the version, **Release Current Version** (`.github/workflows/release-current.yml`) is the same flow minus the bump and changelog: `bump-version.mjs check` confirms all five sites agree, it gates on lint/test/build, tags, and calls `release.yml`. It shares the `version-bump` concurrency group so the two can't race on a tag.
 
 Two non-obvious constraints are baked into that workflow, both consequences of the same GitHub rule — **a workflow using the default `GITHUB_TOKEN` cannot trigger another workflow**:
 

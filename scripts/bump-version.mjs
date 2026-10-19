@@ -7,6 +7,7 @@
 //   node scripts/bump-version.mjs major        # 1.8.1 -> 2.0.0
 //   node scripts/bump-version.mjs 2.0.0-rc.1   # explicit
 //   node scripts/bump-version.mjs patch --dry-run
+//   node scripts/bump-version.mjs check        # verify only, change nothing
 //
 // package.json is the source of truth for the current version. The npm pair is
 // handled by `npm version --no-git-tag-version`, which rewrites package.json and
@@ -18,6 +19,8 @@
 // that file contains a `version =` line for every crate in the tree.
 //
 // Prints `version=<new>` on stdout as its last line so CI can capture it.
+// `check` writes nothing: it confirms all five sites already agree with
+// package.json and prints `version=<current>` (used by release-current.yml).
 
 import { execFileSync } from 'node:child_process'
 import { readFileSync, writeFileSync } from 'node:fs'
@@ -41,10 +44,17 @@ function die(message) {
   process.exit(1)
 }
 
-if (!spec) die('usage: bump-version.mjs <patch|minor|major|x.y.z> [--dry-run]')
+if (!spec) die('usage: bump-version.mjs <patch|minor|major|x.y.z|check> [--dry-run]')
 
 const current = JSON.parse(readFileSync(PKG, 'utf8')).version
 if (!SEMVER.test(current)) die(`package.json version "${current}" is not semver`)
+
+if (spec === 'check') {
+  verify(current)
+  console.log(`all version sites agree at ${current}`)
+  console.log(`version=${current}`)
+  process.exit(0)
+}
 
 let next
 if (spec === 'patch' || spec === 'minor' || spec === 'major') {
@@ -108,20 +118,25 @@ function replace(file, pattern, value, what) {
 }
 
 // --- verify all five agree ----------------------------------------------------
-const found = {
-  'package.json': JSON.parse(readFileSync(PKG, 'utf8')).version,
-  'package-lock.json (root)': JSON.parse(readFileSync(join(root, 'package-lock.json'), 'utf8')).version,
-  'package-lock.json (packages[""])': JSON.parse(readFileSync(join(root, 'package-lock.json'), 'utf8')).packages[''].version,
-  'tauri.conf.json': JSON.parse(readFileSync(CONF, 'utf8')).version,
-  'Cargo.toml': readFileSync(CARGO_TOML, 'utf8').match(/^\[package\][\s\S]*?\nversion\s*=\s*"([^"]+)"/m)?.[1],
-  'Cargo.lock': readFileSync(CARGO_LOCK, 'utf8').match(/^name = "wysiwyg-markdown"\nversion = "([^"]+)"/m)?.[1],
-}
-
-const wrong = Object.entries(found).filter(([, v]) => v !== next)
-if (wrong.length) {
-  for (const [where, v] of wrong) console.error(`  ${where}: ${v}`)
-  die(`not every version site reached ${next}`)
-}
+verify(next)
 
 console.log(`all version sites now at ${next}`)
 console.log(`version=${next}`)
+
+function verify(expected) {
+  const lock = JSON.parse(readFileSync(join(root, 'package-lock.json'), 'utf8'))
+  const found = {
+    'package.json': JSON.parse(readFileSync(PKG, 'utf8')).version,
+    'package-lock.json (root)': lock.version,
+    'package-lock.json (packages[""])': lock.packages[''].version,
+    'tauri.conf.json': JSON.parse(readFileSync(CONF, 'utf8')).version,
+    'Cargo.toml': readFileSync(CARGO_TOML, 'utf8').match(/^\[package\][\s\S]*?\nversion\s*=\s*"([^"]+)"/m)?.[1],
+    'Cargo.lock': readFileSync(CARGO_LOCK, 'utf8').match(/^name = "wysiwyg-markdown"\nversion = "([^"]+)"/m)?.[1],
+  }
+
+  const wrong = Object.entries(found).filter(([, v]) => v !== expected)
+  if (wrong.length) {
+    for (const [where, v] of wrong) console.error(`  ${where}: ${v}`)
+    die(`not every version site is at ${expected}`)
+  }
+}
