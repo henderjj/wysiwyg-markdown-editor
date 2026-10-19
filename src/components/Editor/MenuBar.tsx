@@ -1,13 +1,13 @@
 import { Editor } from '@tiptap/react'
 import { useState, useRef, useEffect } from 'react'
-import { common } from 'lowlight'
 import { TableCreationDialog } from './TableCreationDialog'
 import { ImageDialog } from './ImageDialog'
 import { LinkDialog } from './LinkDialog'
 import { applyLink, getLinkTarget, headingOptions, removeLink, type HeadingOption, type LinkTarget } from '../../lib/linkEditing'
+import { codeGrammars } from '../../lib/codeLanguages'
 import { getActiveComment, addCommentBlocker, deleteComment } from '../../extensions/critic-markup/CriticMarkup'
 
-const codeLanguages = Object.keys(common).sort()
+const codeLanguages = Object.keys(codeGrammars).sort()
 
 // Display names for code languages
 const languageDisplayNames: Record<string, string> = {
@@ -35,6 +35,7 @@ const languageDisplayNames: Record<string, string> = {
   'php-template': 'PHP Template',
   plaintext: 'Plain Text',
   python: 'Python',
+  powershell: 'PowerShell',
   'python-repl': 'Python REPL',
   r: 'R',
   ruby: 'Ruby',

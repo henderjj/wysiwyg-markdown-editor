@@ -45,6 +45,9 @@ const languageAliases: Record<string, string> = {
   'objc': 'objectivec',
   'objective-c': 'objectivec',
   'vb': 'vbnet',
+  'ps1': 'powershell',
+  'ps': 'powershell',
+  'pwsh': 'powershell',
 }
 
 function normalizeLanguage(lang: string): string {

@@ -209,7 +209,7 @@ Click the **{ }** button on the toolbar to insert a code block.
 
 ### Choosing a Language
 
-When your cursor is in a code block, click the code block button again to open a dropdown where you can select a language (JavaScript, Python, SQL, and many more). Syntax highlighting is applied automatically.
+When your cursor is in a code block, click the code block button again to open a dropdown where you can select a language (JavaScript, Python, PowerShell, SQL, and many more). Syntax highlighting is applied automatically. Common short names in files you open are recognised too, for example ` ```ps1 ` or ` ```pwsh ` for PowerShell; these are saved back as ` ```powershell `.
 
 ### Tab Indentation
 
