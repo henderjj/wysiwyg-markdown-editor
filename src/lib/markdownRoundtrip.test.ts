@@ -142,6 +142,13 @@ describe('markdownToHtml', () => {
         '<pre><code class="language-javascript">const x = 1</code></pre>'
       )
     })
+    it('PowerShell aliases normalize to powershell', () => {
+      for (const alias of ['ps1', 'ps', 'pwsh', 'PowerShell']) {
+        expect(markdownToHtml('```' + alias + '\nGet-ChildItem\n```')).toBe(
+          '<pre><code class="language-powershell">Get-ChildItem</code></pre>'
+        )
+      }
+    })
     it('code block preserves HTML entities', () => {
       expect(markdownToHtml('```\n<div>&amp;</div>\n```')).toBe(
         '<pre><code>&lt;div&gt;&amp;amp;&lt;/div&gt;</code></pre>'

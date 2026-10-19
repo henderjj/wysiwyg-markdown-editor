@@ -19,7 +19,8 @@ import { ESCAPABLE_PUNCTUATION } from '../../lib/markdownParser'
 import { internalLinkFragment, navigateToHeading } from '../../lib/headingAnchors'
 import { openExternalUrl } from '../../lib/tauri'
 import { linkTooltipDecorations } from '../../lib/linkEditing'
-import { common, createLowlight } from 'lowlight'
+import { createLowlight } from 'lowlight'
+import { codeGrammars } from '../../lib/codeLanguages'
 import { MenuBar } from './MenuBar'
 import { FloatingTableToolbar } from './FloatingTableToolbar'
 import { FloatingImageToolbar } from './FloatingImageToolbar'
@@ -41,7 +42,7 @@ import { Mermaid } from '../../extensions/mermaid/Mermaid'
 import { MermaidViewerDialog } from '../../extensions/mermaid/MermaidViewerDialog'
 import { SearchBar } from './SearchBar'
 
-const lowlight = createLowlight(common)
+const lowlight = createLowlight(codeGrammars)
 
 interface EditorProps {
   content?: string
