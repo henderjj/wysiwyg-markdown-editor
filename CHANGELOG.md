@@ -4,6 +4,20 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.3]
+
+### Changed
+
+- Merged 8 Dependabot dependency updates since v1.12.2:
+  - Bump mermaid from 12.1.0 to 12.2.0 in the production-minor-patch group (#79)
+  - Bump the tauri group with 4 updates (#77)
+  - Bump the development-minor-patch group with 4 updates (#80)
+  - Bump the react group with 2 updates (#78)
+  - Bump the tiptap group with 13 updates (#76)
+  - Bump the development-minor-patch group across 1 directory with 3 updates (#75)
+  - Bump the vite group with 2 updates (#73)
+  - Bump the tauri group with 5 updates (#72)
+
 ## [1.12.2]
 
 ### Changed
