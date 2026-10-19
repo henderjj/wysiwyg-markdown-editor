@@ -31,8 +31,9 @@ name: Release
 # Two ways in, and both end up with a real tag name in TAG_NAME below.
 #
 #   push: tags   — the normal route. `git push origin v1.9.0`.
-#   workflow_call — used by version-bump.yml, which creates the tag itself and
-#                   then calls this workflow directly. That call is NOT
+#   workflow_call — used by version-bump.yml and release-current.yml, which
+#                   create the tag themselves and then call this workflow
+#                   directly. That call is NOT
 #                   optional plumbing: a tag pushed by a workflow using the
 #                   default GITHUB_TOKEN does not trigger another workflow, so
 #                   the `push: tags` route above would simply never fire for a

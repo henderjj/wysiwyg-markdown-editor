@@ -126,14 +126,15 @@ These are identified from the code rather than from a failed build:
 
 ### Builds and Releases
 
-Four workflows cover this:
+Five workflows cover this:
 
 | Workflow | Trigger | What it does |
 |----------|---------|--------------|
 | **CI** | every push and PR | Lint, test and build the web app on Node 22 and 24 |
 | **Desktop Build** | push to `main`, PRs touching `src-tauri/`, manual | Compile and bundle the desktop app on Windows, macOS and Linux; attach installers to the run |
-| **Release** | pushing a `v*` tag, or called by Version Bump and Release | Build all three platforms and attach the installers to a **draft** GitHub Release |
+| **Release** | pushing a `v*` tag, or called by Version Bump and Release or Release Current Version | Build all three platforms and attach the installers to a **draft** GitHub Release |
 | **Version Bump and Release** | manual | Bump the version everywhere, draft a changelog, verify, tag, and run Release |
+| **Release Current Version** | manual | Release the version already on `main` without bumping it: verify, tag, and run Release |
 
 Releases are drafted rather than published automatically, so the binaries can be checked before anyone is offered them.
 
@@ -142,6 +143,10 @@ Releases are drafted rather than published automatically, so the binaries can be
 After merging a batch of Dependabot PRs, run **Actions → Version Bump and Release → Run workflow**. Pick `patch`, `minor` or `major` (or type an exact version), and it will bump all five version sites, draft a `CHANGELOG.md` section listing everything merged since the last tag, run lint/test/build as a gate, commit, tag, and hand off to the Release workflow. Tick **Dry run** to see the version and changelog it would produce without touching the repository.
 
 Nothing is committed if lint, test or build fails, so a bad batch of merges leaves `main` untouched. The changelog section it writes is a factual list of merges, not finished prose — expand it before publishing the draft release.
+
+#### When the version is already bumped: Release Current Version
+
+If a merged PR already bumped the version (as feature PRs do), run **Actions → Release Current Version → Run workflow** instead. It checks that all five version sites agree and that the tag doesn't exist yet, runs lint/test/build as a gate, tags the commit, and hands off to the Release workflow. It commits nothing, so `CHANGELOG.md` stays as the PR left it. Tick **Dry run** to run the checks without tagging.
 
 #### The manual route
 

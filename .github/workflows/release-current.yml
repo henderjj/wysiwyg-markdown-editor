@@ -1,0 +1,129 @@
+name: Release Current Version
+
+# The "the PR already bumped the version, just ship it" button.
+#
+# Run it from Actions → Release Current Version → Run workflow. It reads the
+# version already in package.json, checks that all five version sites agree
+# and that the tag doesn't exist yet, gates on lint/test/build, tags the
+# commit, and hands off to release.yml to build the three-platform installers
+# into a DRAFT release. Nothing is committed, so CHANGELOG.md is left as the
+# PR wrote it.
+#
+# Use Version Bump and Release instead when the version still needs bumping.
+#
+# Like version-bump.yml, this calls release.yml rather than relying on its
+# `on: push: tags` trigger: a tag pushed with the default GITHUB_TOKEN does not
+# trigger another workflow, so the tag would appear and nothing would build.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Do everything except push the tag'
+        type: boolean
+        default: false
+
+# Shares version-bump.yml's group: either one racing the other could try to
+# tag the same version twice.
+concurrency:
+  group: version-bump
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    name: Verify and tag
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write # pushes the tag
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      # Empty unless a tag was actually pushed, which is what gates the release
+      # job below — so a dry run builds nothing.
+      tag: ${{ steps.tag.outputs.tag }}
+
+    steps:
+      # Full history so the existing tags are present for the check below.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22.x
+          cache: npm
+
+      - run: npm ci
+
+      - name: Check all five version sites agree
+        id: version
+        run: |
+          set -euo pipefail
+          node scripts/bump-version.mjs check | tee "$RUNNER_TEMP/check.log"
+          VERSION=$(tail -n1 "$RUNNER_TEMP/check.log" | cut -d= -f2)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check the tag is new
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          TAG="v$VERSION"
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "::error::Tag $TAG already exists. Bump the version first, or use Version Bump and Release."
+            exit 1
+          fi
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Tag
+        id: tag
+        if: ${{ !inputs.dry_run }}
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          TAG="v$VERSION"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git tag -a "$TAG" -m "$TAG"
+          git push origin "$TAG"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Summary
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          {
+            echo "### Version $VERSION"
+            echo
+            if [ -n "$TAG" ]; then
+              echo "Tagged **$TAG** at $(git rev-parse --short HEAD). The installers are building now."
+              echo
+              echo "The release is created as a **draft**. Check the installers and"
+              echo "release notes, then publish it from the Releases page."
+            else
+              echo "Dry run - nothing was tagged, so nothing is building."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # Same workflow the `git push origin v1.9.0` route uses — see release.yml's
+  # header for why it is called rather than triggered.
+  release:
+    name: Release
+    needs: tag
+    if: ${{ needs.tag.outputs.tag != '' }}
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ needs.tag.outputs.tag }}
