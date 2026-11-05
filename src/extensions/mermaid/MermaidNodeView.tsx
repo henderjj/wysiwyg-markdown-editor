@@ -1,6 +1,6 @@
 import { NodeViewWrapper, NodeViewContent, type NodeViewProps } from '@tiptap/react'
 import { useCallback, useEffect, useState } from 'react'
-import { loadMermaid, nextMermaidRenderId } from './mermaidLoader'
+import { loadMermaid, mermaidConfig, renderMermaid } from './mermaidLoader'
 import type { MermaidOptions } from './Mermaid'
 
 function isDarkMode() {
@@ -35,12 +35,8 @@ export function MermaidNodeView({ node, editor, extension, getPos }: NodeViewPro
     try {
       const mermaid = await loadMermaid()
       // Re-initialise so the diagram follows the current app theme.
-      mermaid.initialize({
-        startOnLoad: false,
-        securityLevel: 'strict',
-        theme: isDarkMode() ? 'dark' : 'default',
-      })
-      const { svg: rendered } = await mermaid.render(nextMermaidRenderId(), code)
+      mermaid.initialize(mermaidConfig(isDarkMode() ? 'dark' : 'default'))
+      const rendered = await renderMermaid(mermaid, code)
       setSvg(rendered)
       setError(null)
     } catch (e) {
