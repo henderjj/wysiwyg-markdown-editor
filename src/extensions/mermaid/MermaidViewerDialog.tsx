@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
-import { loadMermaid, nextMermaidRenderId } from './mermaidLoader'
+import { loadMermaid, mermaidConfig, renderMermaid } from './mermaidLoader'
 import {
   clampViewport,
   fitViewport,
@@ -149,12 +149,8 @@ export function MermaidViewerDialog({ source, onClose, onFallbackFocus }: Mermai
     void (async () => {
       try {
         const mermaid = await loadMermaid()
-        mermaid.initialize({
-          startOnLoad: false,
-          securityLevel: 'strict',
-          theme: isDarkMode() ? 'dark' : 'default',
-        })
-        const { svg: rendered } = await mermaid.render(nextMermaidRenderId(), code)
+        mermaid.initialize(mermaidConfig(isDarkMode() ? 'dark' : 'default'))
+        const rendered = await renderMermaid(mermaid, code)
         if (cancelled) return
         const size = parseSvgSize(rendered)
         contentSizeRef.current = size

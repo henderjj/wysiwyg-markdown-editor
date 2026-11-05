@@ -8,7 +8,8 @@ const mocks = vi.hoisted(() => ({
   seq: { n: 0 },
 }))
 
-vi.mock('../extensions/mermaid/mermaidLoader', () => ({
+vi.mock('../extensions/mermaid/mermaidLoader', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../extensions/mermaid/mermaidLoader')>()),
   loadMermaid: mocks.loadMermaid,
   nextMermaidRenderId: () => {
     const id = `mmd-${mocks.seq.n++}`

@@ -1,5 +1,5 @@
 import { wrapHtmlDocument } from './markdown'
-import { loadMermaid, nextMermaidRenderId } from '../extensions/mermaid/mermaidLoader'
+import { loadMermaid, mermaidConfig, renderMermaid } from '../extensions/mermaid/mermaidLoader'
 
 /**
  * Printing does not use the live app DOM.
@@ -62,18 +62,18 @@ export async function inlineMermaidDiagrams(bodyHtml: string): Promise<string> {
   // diagram authored in dark mode would otherwise print dark-on-white.
   // Re-initialising globally is safe: MermaidNodeView re-initialises on every
   // render, so this corrects itself.
-  mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'default' })
+  mermaid.initialize(mermaidConfig('default'))
 
   for (const block of blocks) {
     const pre = block.parentElement
     const source = (block.textContent || '').trim()
     if (!pre || !source) continue
     try {
-      // nextMermaidRenderId() is mandatory, never a fixed id: Mermaid prefixes
-      // its internal marker/clipPath ids with the render id and resolves
-      // url(#...) to the first document-order match, so a reused id makes one
-      // diagram's arrowheads point at another's markers.
-      const { svg } = await mermaid.render(nextMermaidRenderId(), source)
+      // renderMermaid() takes a fresh nextMermaidRenderId(), never a fixed id:
+      // Mermaid prefixes its internal marker/clipPath ids with the render id
+      // and resolves url(#...) to the first document-order match, so a reused
+      // id makes one diagram's arrowheads point at another's markers.
+      const svg = await renderMermaid(mermaid, source)
       const holder = parsed.createElement('div')
       holder.className = 'mermaid-print'
       holder.innerHTML = svg
