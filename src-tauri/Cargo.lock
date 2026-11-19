@@ -5480,7 +5480,7 @@ dependencies = [
 
 [[package]]
 name = "wysiwyg-markdown"
-version = "1.13.1"
+version = "1.13.2"
 dependencies = [
  "serde",
  "serde_json",

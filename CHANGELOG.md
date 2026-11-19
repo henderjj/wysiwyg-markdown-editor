@@ -4,6 +4,22 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.2]
+
+### Changed
+
+- Merged 5 Dependabot dependency updates since v1.13.1:
+  - Bump jsdom from 31.0.0 to 31.0.1 in the development-minor-patch group (#102)
+  - Bump the tiptap group with 13 updates (#101)
+  - Bump the tailwind group with 2 updates (#98)
+  - Bump vite from 8.3.5 to 8.3.6 in the vite group (#97)
+  - Bump the tiptap group with 13 updates (#96)
+
+### Other changes
+
+- Weekly dependency updates (2026-11-18) (#103)
+- Weekly dependency update (2026-11-11) (#100)
+
 ## [1.12.3]
 
 ### Changed
