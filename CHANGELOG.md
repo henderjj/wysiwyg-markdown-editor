@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.3]
+
+### Changed
+
+- Merged 1 Dependabot dependency update since v1.13.2:
+  - Bump the tiptap group with 13 updates (#105)
+- Weekly dependency updates (2026-11-25): refreshed npm and Cargo dependencies within their existing ranges, including ProseMirror (`prosemirror-view` 1.44.0, `prosemirror-inputrules` 1.7.0), `dompurify` 3.5.0 and `wry` 0.57.4. No user-facing changes.
+
 ## [1.13.2]
 
 ### Changed
